@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+      "baseUrl": ".",
+      "paths": {
+          "@/*": ["src/js/*"],
+          "@css/*": ["src/css/*"],
+          "@svg/*": ["src/svg/*"]
+      },
+      "target": "ES6",
+      "allowSyntheticDefaultImports": true
+  },
+  "include": ["src/js/**/*"],
+  "exclude": ["node_modules/"]
+}

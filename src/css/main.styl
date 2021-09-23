@@ -1,0 +1,216 @@
+body > textarea
+    position: fixed !important;
+
++prefix-classes(prefix)
+  .-container
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    min-height: 300px;
+    height: 100%;
+    position: relative;
+    background-color: #282828;
+    overflow: hidden;
+    letter-spacing: 0.3px;
+  
+    div, ul, label, input, li
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -ms-user-select: none; 
+      -moz-user-select: -moz-none;
+      -khtml-user-select: none;
+      -webkit-user-select: none;
+      user-select: none;
+  
+    .-header
+        /* BUTTON AND LOGO */
+        /*min-width: 533px;*/
+        position: inherit;
+        display: flex;
+        flex: 1 0;
+        flex-direction: row;
+        background-color: #151515;
+        top: 0;
+        width: 100%;
+    .-header-buttons,
+    .-controls-buttons
+        float: right;
+        margin: 8px;
+
+    .-header-logo,
+    .-controls-logo
+        float: left;
+        width: 64px;
+        padding: 17px;
+    .-header-menu
+        flex: auto;
+        
+    .-controls-logo,
+    .-controls-buttons
+        width: 270px;
+        height: 100%;
+        display: none;
+
+    .-header-buttons button,
+    .-header-buttons div,
+    .-controls-buttons button,
+    .-controls-buttons div
+        display: inline-block;
+        position: relative;
+        width: 80px;
+        height: 40px;
+        padding: 0;
+        line-height: 40px;
+        outline: none;
+        border-radius: 20px;
+        border: 1px solid #ddd;
+        font-family: 'Noto Sans', sans-serif;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        vertical-align: middle;
+        letter-spacing: 0.3px;
+        text-align: center;
+
+    .-download-btn
+        background-color: #fdba3b;
+        border-color: #fdba3b;
+        color: #fff;
+    .-load-btn
+        position: absolute;
+        left: 0;
+        right: 0;
+        display: inline-block;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        cursor: pointer;
+        opacity: 0;
+    .-main-container
+        position: inherit;
+        width: 100%;
+        height: 100%;
+        top: 0;
+    .-main
+        position: inherit;
+        text-align: center;
+        /* top: 64px; */
+        width: 100%;
+        height: 100%;
+        bottom: 0;
+        right: 0;
+        left: 0;
+    .-wrap
+        position: inherit;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        .-size-wrap
+            display: table;
+            width: 100%;
+            height: 100%
+            .-align-wrap
+                display: table-cell;
+                vertical-align: middle;
+    .
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+    .-main-layer
+      border: 1px solid red;
+      border-collapse: collapse;
+      display: flex;
+      flex: 1 0;
+      width: 100%;
+      height: 100%;
+      flex-direction: column;
+      .-layer-top
+        width: 100%;
+        max-height: 50px;
+        border: 1px solid green;
+      .-layer-main
+        width: 100%;
+        height: 50%;
+        min-height: 120px;
+        border: 1px solid blue;
+        display flex;
+        flex-direction: row;
+        .-layer-main-left
+          height: 100%;
+          max-width: 50px;
+          border: 1px solid red;
+        .-layer-main-mid
+          height: 100%;
+          flex: auto;
+          border: 1px solid green;
+        .-layer-main-right
+          height: 100%;
+          min-width: 120px;
+          width: 50%;
+          border: 1px solid purple;
+      .-layer-foot
+        width: 100%;
+        flex: auto;
+        border: 1px solid purple;
+
+
+
+
+/* BIG MENU */
+.{prefix}-container
+    .{prefix}-menu, .{prefix}-help-menu
+        width: auto;
+        list-style: none;
+        padding: 0;
+        margin: 0 auto;
+        display: table-cell;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+        > .{prefix}-item
+            position: relative;
+            display: inline-block;
+            border-radius: 2px;
+            padding: 7px 8px 3px 8px;
+            cursor: pointer;
+            margin: 0 4px;
+        > .{prefix}-item[tooltip-content]:hover
+            &:before
+                content: '';
+                position: absolute;
+                display: inline-block;
+                margin: 0 auto 0;
+                width: 0;
+                height: 0;
+                border-right: 7px solid transparent;
+                border-top: 7px solid #2f2f2f;
+                border-left: 7px solid transparent;
+                left: 13px;
+                top: -2px;
+            &:after
+                content: attr(tooltip-content);
+                position: absolute;
+                display: inline-block;
+                background-color: #2f2f2f;
+                color: #fff;
+                padding: 5px 8px;
+                font-size: 11px;
+                font-weight: lighter;
+                border-radius: 3px;
+                max-height: 23px;
+                top: -25px;
+                left: 0;
+                min-width: 24px;
+        > .{prefix}-item.active
+            background-color: #fff;
+            transition: all .3s ease;
+    .{prefix}-wrap
+        position: inherit;
+    .{prefix}-canvas-container
+        margin: auto;
+    .lower-canvas
+        border: 1px dashed silver;

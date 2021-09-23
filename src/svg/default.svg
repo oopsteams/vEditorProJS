@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg display="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs id="ve-pro-svg-default-icons">
+  <symbol id="ic-media" viewBox="0 0 32 32">
+    <path fill="none" stroke="inherit" stroke-linecap="round" stroke-linejoin="round" d="M17.314 18.867l1.951-2.53 4 5.184h-17l6.5-8.84 4.549 6.186z"/>
+    <path stroke="none" fill="inherit" d="M27.01 4a11 11 0 0 1 -1 1H3v24h24V4.1a1 1 0 0 1 1 1V29a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h15.01z"/>
+  </symbol>
+  <symbol id="ic-make" viewBox="0 0 32 32">
+    <path stroke="none" fill="inherit" d="M3 4a2 2 0 0 0 -1 1L22 24a2 2 0 0 1 1 -1L3 4z"/>
+    <path stroke="none" fill="inherit" d="M22 24a2 2 0 0 1 1 -1a3 3 0 1 1 -1 1.5a2 2 0 0 1 1 0.5a2 2 0 1 0 1 -1"/>
+    <path stroke="none" fill="inherit" d="M28 4a2 2 0 0 1 1 1L10 24a2 2 0 0 0 -1 -1L28 4z"/>
+    <path stroke="none" fill="inherit" d="M10 24a2 2 0 0 0 -1 -1a3 3 0 1 0 1 1.5a2 2 0 0 0 -1 0.5a2 2 0 1 1 -1 -1"/>
+  </symbol>
+  <symbol id="ic-imitate" viewBox="0 0 32 32">
+    <path fill="none" d="M27.01 4a11 11 0 0 1 -1 1H3v24h24V4.1a1 1 0 0 1 1 1V29a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h15.01z"/>
+    <path stroke="none" stroke-linecap="round" stroke-linejoin="round" d="M 11 16l0 10L21 21z" />
+    <path fill="none" d="M 9.5 4.5l-4.5 8a1 1 0 0 0 1 0.5L10 4.5z" />
+    <path fill="none" d="M 16 4.5l-4.5 8a1 1 0 0 0 1 0.5L16.5 4.5z" />
+    <path fill="none" d="M 22.5 4.5l-4.5 8a1 1 0 0 0 1 0.5L23 4.5z" />
+  </symbol>
+  <symbol id="ic-storage" viewBox="0 0 32 32">
+    <path fill="none" stroke="inherit" stroke-linecap="round" stroke-linejoin="round" d="M17.314 18.867l1.951-2.53 4 5.184h-17l6.5-8.84 4.549 6.186z"/>
+    <path stroke="none" fill="inherit" d="M27.01 4a11 11 0 0 1 -1 1H3v24h24V4.1a1 1 0 0 1 1 1V29a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h15.01z"/>
+  </symbol>
+  <symbol id="ic-amake" viewBox="0 0 32 32">
+    <path fill="none" stroke="inherit" stroke-linecap="round" stroke-linejoin="round" d="M17.314 18.867l1.951-2.53 4 5.184h-17l6.5-8.84 4.549 6.186z"/>
+    <path stroke="none" fill="inherit" d="M27.01 4a11 11 0 0 1 -1 1H3v24h24V4.1a1 1 0 0 1 1 1V29a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h15.01z"/>
+  </symbol>
+</defs>
+</svg>

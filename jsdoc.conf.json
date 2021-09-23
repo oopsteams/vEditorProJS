@@ -1,0 +1,27 @@
+{
+    "source": {
+      "include": ["src", "README.md"],
+      "exclude": [],
+      "includePattern": ".+\\.js(doc)?$",
+      "excludePattern": "(^|\\/|\\\\)_"
+    },
+    "plugins": ["plugins/markdown"],
+    "templates": {
+      "name": "vEditorProJS",
+      "logo": {
+        "url": "http://static.oopsteam.site/static/logo/ve/ve@0.25x.png",
+        "width": "37px",
+        "height": "38px",
+        "link": "https://github.com/nhn/tui.jsdoc-template"
+      }
+    },
+    "opts": {
+      "private": false,
+      "recurse": true,
+      "destination": "doc",
+      "tutorials": "examples",
+      "template": "./node_modules/tui-jsdoc-template",
+      "package": "package.json"
+    }
+  }
+  
