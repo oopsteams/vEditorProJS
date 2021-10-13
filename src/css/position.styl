@@ -1,0 +1,47 @@
+/* POSITION TOP & BOTTOM */
+.{prefix}-container
+  &.top, &.bottom
+    .{prefix}-submenu
+        .{prefix}-partition.only-left-right
+            display: none;
+
+
+/* POSITION BOTTOM */
+.{prefix}-container
+    &.bottom .{prefix}-submenu > div
+        padding-bottom: 24px;
+
+/* POSITION TOP */
+.{prefix}-container
+  &.top
+    /*
+    .color-picker-control .triangle
+        top: -8px;
+        border-right: 7px solid transparent;
+        border-top: 0px;
+        border-left: 7px solid transparent;
+        border-bottom: 8px solid #fff;
+    */
+    .{prefix}-size-wrap
+        height: 100%;
+    .{prefix}-main-container
+        bottom: 0;
+    .{prefix}-menu, .{prefix}-main-menu
+        > .{prefix}-item[tooltip-content]
+            &:before
+                left: 13px;
+                border-top: 0;
+                border-bottom: 7px solid #2f2f2f;
+                top: 33px;
+                z-index: 9999;
+            &:after
+                top: 38px;
+                z-index: 9999;
+/*
+    .{prefix}-submenu
+        top: 0;
+        bottom: auto;
+        > div
+            padding-top: 24px;
+            vertical-align: top;
+*/

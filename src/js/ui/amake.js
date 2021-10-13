@@ -1,6 +1,6 @@
 import Submenu from '@/ui/submenuBase';
 // import snippet from 'tui-code-snippet';
-import templateHtml from '@/ui/template/submenu/make';
+import templateHtml from '@/ui/template/submenu/amake';
 
 // import { eventNames, selectorNames } from '@/consts';
 

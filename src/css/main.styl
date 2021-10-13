@@ -1,3 +1,4 @@
+left_menu_width = 50px;
 body > textarea
     position: fixed !important;
 
@@ -9,7 +10,7 @@ body > textarea
     min-height: 300px;
     height: 100%;
     position: relative;
-    background-color: #282828;
+    background-color: #282828;/*282828*/
     overflow: hidden;
     letter-spacing: 0.3px;
   
@@ -41,12 +42,10 @@ body > textarea
     .-header-logo,
     .-controls-logo
         float: left;
-        width: 64px;
-        padding: 17px;
+        width: 270px;
+        padding-top: 7px;
     .-header-menu
         flex: auto;
-        
-    .-controls-logo,
     .-controls-buttons
         width: 270px;
         height: 100%;
@@ -88,6 +87,7 @@ body > textarea
         cursor: pointer;
         opacity: 0;
     .-main-container
+        display: table-cell;
         position: inherit;
         width: 100%;
         height: 100%;
@@ -120,6 +120,7 @@ body > textarea
       width: 100%;
       height: 100%;
       text-align: center;
+    .-media-layer,
     .-main-layer
       border: 1px solid red;
       border-collapse: collapse;
@@ -141,28 +142,41 @@ body > textarea
         flex-direction: row;
         .-layer-main-left
           height: 100%;
-          max-width: 50px;
-          border: 1px solid red;
+          width: left_menu_width;
+          border: 0px solid red;
         .-layer-main-mid
           height: 100%;
-          flex: auto;
-          border: 1px solid green;
+          width: "-webkit-calc(50% - %s)" % left_menu_width;
+          width: "-moz-calc(50% - %s)" % left_menu_width;
+          width: "calc(50% - %s)" % left_menu_width;
+          border: 0px solid green;
+          overflow-x: auto;
         .-layer-main-right
           height: 100%;
-          min-width: 120px;
           width: 50%;
-          border: 1px solid purple;
+          flex: auto;
+          border: 0px solid purple;
+          text-align: center;
+          vertical-align: middle;
+          display: table;
       .-layer-foot
         width: 100%;
         flex: auto;
-        border: 1px solid purple;
-
-
-
+        border: 0px solid purple;
+    .-media-layer
+        .-media-layer-top
+            width: 100%;
+            max-height: 40px;
+            border: 1px solid green;
+        .-media-layer-main
+            width: 100%;
+            border: 1px solid blue;
+            flex: auto;
+            overflow-x: auto;
 
 /* BIG MENU */
 .{prefix}-container
-    .{prefix}-menu, .{prefix}-help-menu
+    .{prefix}-menu, .{prefix}-help-menu, .{prefix}-main-menu, .{prefix}-track-menu
         width: auto;
         list-style: none;
         padding: 0;
@@ -177,7 +191,8 @@ body > textarea
             border-radius: 2px;
             padding: 7px 8px 3px 8px;
             cursor: pointer;
-            margin: 0 4px;
+            margin: 0;
+            margin-right: 4px;
         > .{prefix}-item[tooltip-content]:hover
             &:before
                 content: '';
@@ -191,6 +206,7 @@ body > textarea
                 border-left: 7px solid transparent;
                 left: 13px;
                 top: -2px;
+                z-index: 9999;
             &:after
                 content: attr(tooltip-content);
                 position: absolute;
@@ -205,12 +221,14 @@ body > textarea
                 top: -25px;
                 left: 0;
                 min-width: 24px;
+                z-index: 9999;
         > .{prefix}-item.active
-            background-color: #fff;
+            background-color: #F0F8FF;
             transition: all .3s ease;
     .{prefix}-wrap
         position: inherit;
     .{prefix}-canvas-container
         margin: auto;
-    .lower-canvas
-        border: 1px dashed silver;
+    .{prefix}-layer-main-right
+        .lower-canvas
+            border: 1px dashed silver;

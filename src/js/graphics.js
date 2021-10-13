@@ -677,6 +677,29 @@ class Graphics {
     return this;
   }
 
+  add(objects) {
+    let theArgs = [];
+    if (isArray(objects)) {
+      theArgs = objects;
+    } else {
+      theArgs.push(objects);
+    }
+
+    this._canvas.add(...theArgs);
+  }
+
+  discardSelection() {
+    this._canvas.discardActiveObject();
+    this._canvas.renderAll();
+  }
+
+  changeSelectableAll(selectable) {
+    this._canvas.forEachObject((obj) => {
+      obj.selectable = selectable;
+      obj.hoverCursor = selectable ? 'move' : 'crosshair';
+    });
+  }
+
   /* All Event Handlers */
   _onMouseDown(fEvent) {
     const { e: event, target } = fEvent;

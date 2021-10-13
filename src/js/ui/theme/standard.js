@@ -1,5 +1,5 @@
 export default {
-  'common.bi.image': 'img/bg.png',
+  'common.bi.image': '/htm/img/logo.png',
   'common.bisize.width': '21px',
   'common.bisize.height': '21px',
   'common.backgroundImage': 'none',
@@ -7,7 +7,7 @@ export default {
   'common.border': '0px',
 
   // control
-  'control.backgroundColor': '#e5e5e5',
+  'control.backgroundColor': '#ffffff',
 
   // header
   'header.backgroundImage': 'none',

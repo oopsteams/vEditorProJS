@@ -1,0 +1,67 @@
+.{prefix}-media-layer-main
+    .{prefix}-media-load-btn
+        display: inline-block;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+        opacity: 0;
+        position: absolute;
+        left: 0;
+        top: 0;
+    .{prefix}-media-item
+        display: inline-block;
+        border:2px solid silver;
+        border-radius:4px;
+        text-align: center;
+        vertical-align: middle;
+        margin: 1px;
+        .{prefix}-media-item-data
+            display: table;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            align-content: center;
+            > div
+                display: table-cell;
+                text-align: center;
+                vertical-align: middle;
+    .{prefix}-media-load-frame
+        display: table;
+        position: relative;
+        align-content: center;
+        > div
+            display: table-cell;
+            text-align: center;
+            vertical-align: middle;
+
+.{prefix}-layer-main-mid
+    .{prefix}-media-layer
+        display: none;
+
+.{prefix}-layer-main-mid.make
+    .{prefix}-media-layer.make
+        display: flex;
+.{prefix}-layer-main-mid.imitate
+    .{prefix}-media-layer.imitate
+        display: flex;
+.{prefix}-layer-main-mid.transition
+    .{prefix}-media-layer.transition
+        display: flex;
+.{prefix}-layer-main-mid.wave
+    .{prefix}-media-layer.wave
+        display: flex;
+  
+
+.{prefix}-media-layer-main
+    .{prefix}-media-item
+        .{prefix}-media-item-data
+            .{prefix}-menu
+                cursor: pointer;
+                svg > use
+                    display: none;
+                svg > use.normal
+                    display: block;
+            .{prefix}-menu:hover svg > use.hover
+                display: block;
+            .{prefix}-menu.active svg > use.active
+                display: block;

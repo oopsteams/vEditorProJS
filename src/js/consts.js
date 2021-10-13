@@ -36,6 +36,10 @@ export const eventNames = {
   FOCUS: 'focus',
   BLUR: 'blur',
   BEFORE_RENDER: 'beforeRender',
+  TIME_CHANGED: 'timeChanged',
+  SYNC_TIME_CHANGED: 'syncTimeChanged',
+  PANEL_POS_CHANGED: 'panelPosChanged',
+  PANEL_TICKS_CHANGED: 'panelTicksChanged',
 };
 
 export const SHAPE_FILL_TYPE = {
@@ -68,6 +72,8 @@ export const componentNames = keyMirror(
   'SHAPE',
   'ZOOM'
 );
+
+export const tlComponentNames = keyMirror('PANEL', 'TRACK');
 
 export const commandNames = {
   CLEAR_OBJECTS: 'clearObjects',

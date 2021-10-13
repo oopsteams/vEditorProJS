@@ -106,6 +106,14 @@ class VideoEditor {
     fabric.enableGLFiltering = false;
   }
 
+  getDatasource() {
+    return this.ui.datasource;
+  }
+
+  getTimeline() {
+    return this.ui.timeLine;
+  }
+
   mergeEditorSize(options) {
     const editorRect = {};
     const _rect = this.ui.getEditorMaxRect();

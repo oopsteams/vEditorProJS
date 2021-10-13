@@ -10,6 +10,6 @@ export default ({
   cssPrefix,
 }) => `
     <div class="${cssPrefix}-media-controls" style="${cStyle}">
-        <ul class="${cssPrefix}-submenu"></ul>
+        <!--<ul class="${cssPrefix}-track-menu"></ul>-->
     </div>
 `;

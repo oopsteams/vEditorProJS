@@ -108,18 +108,21 @@ export default ({
     .${cssPrefix}-container .${cssPrefix}-header-logo > img {
         ${biSize}
     }
+    .${cssPrefix}-track-menu use.normal.use-default,
     .${cssPrefix}-menu use.normal.use-default,
     .${cssPrefix}-help-menu use.normal.use-default {
         fill-rule: evenodd;
-        fill: ${menuIconStyle.normal.color};
+        fill: "transparent";
         stroke: ${menuIconStyle.normal.color};
     }
+    .${cssPrefix}-track-menu use.active.use-default,
     .${cssPrefix}-menu use.active.use-default,
     .${cssPrefix}-help-menu use.active.use-default {
         fill-rule: evenodd;
-        fill: ${menuIconStyle.active.color};
+        fill: ${menuIconStyle.hover.color};
         stroke: ${menuIconStyle.active.color};
     }
+    .${cssPrefix}-track-menu use.hover.use-default,
     .${cssPrefix}-menu use.hover.use-default,
     .${cssPrefix}-help-menu use.hover.use-default {
         fill-rule: evenodd;
@@ -131,6 +134,11 @@ export default ({
         fill-rule: evenodd;
         fill: ${menuIconStyle.disabled.color};
         stroke: ${menuIconStyle.disabled.color};
+    }
+    .${cssPrefix}-track-menu use.disabled.use-default {
+      fill-rule: evenodd;
+      fill: ${menuIconStyle.disabled.color};
+      stroke: ${menuIconStyle.disabled.color};
     }
     .${cssPrefix}-submenu use.normal.use-default {
         fill-rule: evenodd;

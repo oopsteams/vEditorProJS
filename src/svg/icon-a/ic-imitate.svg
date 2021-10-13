@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
     <g fill="none" fill-rule="evenodd">
-        <path fill="#434343" d="M27.01 4a11 11 0 0 1 -1 1H3v24h24V4.1a1 1 0 0 1 1 1V29a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h15.01z"/>
+        <path fill="#434343" stroke="#434343" d="M27.01 4a11 11 0 0 1 -1 1H3v24h24V4.1a1 1 0 0 1 1 1V29a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h15.01z"/>
         <path stroke="#434343" stroke-linecap="round" stroke-linejoin="round" d="M 11 16l0 10L21 21z" />
-        <path fill="#434343" d="M 9.5 4.5l-4.5 8a1 1 0 0 0 1 0.5L10 4.5z" />
-        <path fill="#434343" d="M 16 4.5l-4.5 8a1 1 0 0 0 1 0.5L16.5 4.5z" />
-        <path fill="#434343" d="M 22.5 4.5l-4.5 8a1 1 0 0 0 1 0.5L23 4.5z" />
+        <path fill="#434343" stroke="#b89999" d="M 9.5 4.5l-4.5 8a2 2 0 0 0 2 1L12 4.5z" />
+        <path fill="#434343" stroke="#b89999" d="M 16 4.5l-4.5 8a2 2 0 0 0 2 1L18.5 4.5z" />
+        <path fill="#434343" stroke="#b89999" d="M 22.5 4.5l-4.5 8a2 2 0 0 0 2 1L25 4.5z" />
     </g>
 </svg>

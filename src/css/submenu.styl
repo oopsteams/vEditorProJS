@@ -1,0 +1,150 @@
+/* SUBMENU */
+/*
+.{prefix}-layer-main-left
+    .{prefix}-media-controls
+        height: 100%;
+        .{prefix}-submenu
+            display: none;
+            position: relative;
+            overflow: hidden;
+            overflow-y: auto;
+            height: 100%;
+            width: 60px;
+            .{prefix}-button:hover svg > use.active
+                display: block;
+            .{prefix}-submenu-item
+                li
+                    display: inline-block;
+                    align-content: center;
+                .{prefix}-button
+                    position: relative;
+                    cursor: pointer;
+                    display: inline-block;
+                    font-weight: normal;
+                    font-size: 11px;
+                label > span
+                    display: inline-block;
+                    cursor: pointer;
+                    padding-top: 5px;
+                    font-family: "Noto Sans", sans-serif;
+                    font-size: 11px;
+            > div
+                display: none;
+                text-align: center;
+
+.{prefix}-container
+    .{prefix}-layer-main.{prefix}-menu-make .{prefix}-submenu > div.{prefix}-menu-make,
+    .{prefix}-layer-main.{prefix}-menu-amake .{prefix}-submenu > div.{prefix}-menu-amake,
+    .{prefix}-layer-main.{prefix}-menu-imitate .{prefix}-submenu > div.{prefix}-menu-imitate,
+    .{prefix}-layer-main.{prefix}-menu-storage .{prefix}-submenu > div.{prefix}-menu-storage
+        display: table-cell;
+    .{prefix}-layer-main.{prefix}-menu-make,
+    .{prefix}-layer-main.{prefix}-menu-amake,
+    .{prefix}-layer-main.{prefix}-menu-imitate,
+    .{prefix}-layer-main.{prefix}-menu-storage
+        .{prefix}-submenu
+            display: table;
+*/
+.{prefix}-layer-main-left
+    .{prefix}-media-controls
+      height: 100%;
+      .{prefix}-track-menu
+          white-space: inherit;
+          cursor: pointer;
+          display: block;
+          svg > use
+              display: none;
+          > li
+              display: inline-block;
+              margin: 4px auto;
+          > .{prefix}-track-item
+              position: relative;
+              display: inline-block;
+              border-radius: 2px;
+              padding: 7px 8px 3px 8px;
+              cursor: pointer;
+              margin: 0;
+              margin-right: 4px;
+          > .{prefix}-track-item[tooltip-content]
+              &:before
+                  left: 33px;
+                  top: 13px;
+              &:after
+                  top: 8px;
+                  left: 41px;
+                  white-space: nowrap;
+          > .{prefix}-track-item[tooltip-content].enabled:hover
+              &:before
+                  content: '';
+                  position: absolute;
+                  display: inline-block;
+                  margin: 0 auto 0;
+                  width: 0;
+                  height: 0;
+                  border-right: 7px solid #2f2f2f;
+                  border-top: 7px solid transparent;
+                  border-bottom: 7px solid transparent;
+                  left: 33px;
+                  z-index: 9999;
+              &:after
+                  content: attr(tooltip-content);
+                  position: absolute;
+                  display: inline-block;
+                  background-color: #2f2f2f;
+                  color: #fff;
+                  padding: 5px 5px;
+                  font-size: 11px;
+                  font-weight: lighter;
+                  border-radius: 3px;
+                  max-height: 23px;
+                  min-width: 24px;
+                  z-index: 9999;
+      .{prefix}-track-menu
+          > .{prefix}-track-item[tooltip-content]:hover svg > use.hover
+              display: block;
+          > .{prefix}-track-item[tooltip-content].disabled svg > use.disabled
+              display: block;
+          > .{prefix}-track-item[tooltip-content].enabled svg > use.normal
+              display: block;
+
+.{prefix}-layer-main-left
+    .{prefix}-media-controls
+        .{prefix}-track-menu
+            display: none;
+
+.{prefix}-layer-main-left
+    .{prefix}-media-controls.make
+        .{prefix}-track-menu.make
+            display: block;
+
+.{prefix}-layer-main-left
+    .{prefix}-media-controls.amake
+        .{prefix}-track-menu.amake
+            display: block;
+
+.{prefix}-layer-main-left
+    .{prefix}-media-controls.imitate
+        .{prefix}-track-menu.imitate
+            display: block;
+
+.{prefix}-layer-main-left
+    .{prefix}-media-controls.transition
+        .{prefix}-track-menu.transition
+            display: block;
+
+.{prefix}-layer-main-left
+    .{prefix}-media-controls.wave
+        .{prefix}-track-menu.wave
+            display: block;
+
+.{prefix}-layer-main-left
+    .{prefix}-media-controls
+        .{prefix}-partition
+            height: 2px;
+            > div
+                display: block;
+                background-color: #444;
+                width: 40px;
+                height: 1px;
+                border: 0px;
+                border-top: 1px solid #e5e5e5;

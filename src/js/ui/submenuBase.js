@@ -27,13 +27,16 @@ class Submenu {
     this.usageStatistics = usageStatistics;
     this.eventHandler = {};
     this.cssPrefix = cssPrefix;
-    this._makeSubMenuElement({
-      locale,
-      name,
-      makeSvgIcon,
-      templateHtml,
-      cssPrefix,
-    });
+    this.name = name;
+    if (templateHtml) {
+      this._makeSubMenuElement({
+        locale,
+        name,
+        makeSvgIcon,
+        templateHtml,
+        cssPrefix,
+      });
+    }
   }
 
   /**
