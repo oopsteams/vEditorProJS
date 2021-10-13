@@ -46,6 +46,7 @@ class WaveList extends TextureUI {
     this.buildActions();
     // this.setup();
     this.addDatasourceEvents();
+    this.addEvents();
   }
 
   buildActions() {
@@ -55,6 +56,18 @@ class WaveList extends TextureUI {
         this.parent.changeStartMode();
         this.ui.changeMenu(this.parent.name);
         this.ui.timeLine.unlock();
+      },
+      delete: () => {
+        if (this.activedItem) {
+          console.log('waveItem context:', this.activedItem.context);
+          this.activedItem.dispose();
+          const { elemId } = this.activedItem.context;
+          const parser = this.items[elemId];
+          if (parser) {
+            this.datasource.fire('audio:remove', { parser });
+            this.removeSubMenu(['delete']);
+          }
+        }
       },
     };
   }
@@ -82,8 +95,17 @@ class WaveList extends TextureUI {
     }
   }
 
+  setActivedWaveItem(activedItem) {
+    this.activedItem = activedItem;
+    if (activedItem) {
+      this.addSubMenu(['delete']);
+    } else {
+      this.removeSubMenu(['delete']);
+    }
+  }
+
   _changeStartMode() {
-    this.disableSubmenus(['back']);
+    this.addSubMenu(['back']);
     // this.datasource.fire('transitions:load', {});
   }
 
@@ -130,11 +152,12 @@ class WaveList extends TextureUI {
     // allDataMenus.forEach((dm) => {
     //   dm.classList.remove('active');
     // });
-    console.log('_onAddBtnClick elemId:', elemId, ',trackItem:', this.trackItem);
+    console.log('wavelist _onAddBtnClick elemId:', elemId, ',trackItem:', this.trackItem);
     this.activeElement(elemId);
     const parser = this.items[elemId];
+    console.log('wavelist _onAddBtnClick parser:', parser);
     const onProgress = this._onProgress.bind(this);
-    if (parser) {
+    if (parser && !parser.selected) {
       const duration = parser.total_seconds;
       const { srcFileName, fileType } = parser;
       parser.setup(onProgress).then((section) => {
@@ -149,12 +172,15 @@ class WaveList extends TextureUI {
             section,
           },
           () => {
-            this.datasource.fire(`${parser.mime}:setup`, { parser, section });
+            this.datasource.fire(`audio:setup`, { parser, section });
             onProgress('加入队列', 1, '-');
+            parser.selected = true;
           }
         );
         console.log('audio parser section:', section);
       });
+    } else {
+      this.getUI().timeLine.fire('track:wave:focus', { elemId });
     }
     /*
     this.ui.addTransition(this.trackItem, transitionItem.dur, transitionItem, () => {
@@ -169,31 +195,40 @@ class WaveList extends TextureUI {
   }
 
   activeElement(elemId) {
-    // console.log('activeElement elemid:', elemId);
-    // const layerItem = this._els.mainLayer.querySelector(`#${elemId}`);
     const menuCss = `.${this.cssPrefix}-menu.check`;
     const allDataMenus = this._els.mainLayer.querySelectorAll(menuCss);
-    allDataMenus.forEach((dm) => {
+    for (let i = 0, n = allDataMenus.length; i < n; i += 1) {
+      const dm = allDataMenus[i];
       const { id } = dm.querySelector('svg').dataset;
-      console.log('activeElement dm dataset id:', id);
-      dm.classList.remove('active');
       if (id === elemId) {
         dm.classList.add('active');
+        break;
       }
-    });
-    // const menuElem = layerItem.querySelector(menuCss);
-    // menuElem.classList.add('active');
+    }
   }
 
-  remove(transitionItem) {
-    const layerItem = this._els.mainLayer.querySelector(`#${transitionItem.elemId}`);
+  deactiveElement(elemId) {
     const menuCss = `.${this.cssPrefix}-menu.check`;
-    const menuElem = layerItem.querySelector(menuCss);
-    menuElem.classList.remove('active');
-    console.log('remove menuElem:', menuElem, ',transitionItem:', transitionItem);
-    const section = this.parent.getSectionByItem(transitionItem.trackItem);
-    this.datasource.fire('track:transition:remove', { transition: transitionItem, section });
+    const allDataMenus = this._els.mainLayer.querySelectorAll(menuCss);
+    for (let i = 0, n = allDataMenus.length; i < n; i += 1) {
+      const dm = allDataMenus[i];
+      const { id } = dm.querySelector('svg').dataset;
+      if (id === elemId) {
+        dm.classList.remove('active');
+        break;
+      }
+    }
   }
+
+  // remove(transitionItem) {
+  //   const layerItem = this._els.mainLayer.querySelector(`#${transitionItem.elemId}`);
+  //   const menuCss = `.${this.cssPrefix}-menu.check`;
+  //   const menuElem = layerItem.querySelector(menuCss);
+  //   menuElem.classList.remove('active');
+  //   console.log('remove menuElem:', menuElem, ',transitionItem:', transitionItem);
+  //   const section = this.parent.getSectionByItem(transitionItem.trackItem);
+  //   this.datasource.fire('audio:remove', { transition: transitionItem, section });
+  // }
 
   _appendItem(src, fileWidth, fileHeight, fileName) {
     let imgStyle = '',
@@ -214,14 +249,10 @@ class WaveList extends TextureUI {
     btnStyle = `width:${labelWidth}px;position:absolute;left:0;top:0;`;
     btnStyle += `padding-right:2px;`;
     const layerItem = document.createElement('div');
-    layerItem.id = `transitionItem_${this.counter}`;
+    layerItem.id = `waveItem_${this.counter}`;
     this.counter += 1;
-    const audioStyle = `width:${imgWidth}px;height:${imgHeight / 2}px;`;
-    if (src) {
-      audioHtml = `<audio src="${src}" style="${audioStyle}" controls="controls" title="${fileName}" alt="${fileName}"></audio>`;
-    } else {
-      audioHtml = `${this.makeSvgIcon(['active'], 'music', false)}`;
-    }
+    const audioStyle = `width:${imgWidth}px;height:${imgHeight / 2}px;margin-bottom:5px;`;
+
     layerItem.setAttribute('id', layerItem.id);
     layerItem.className = `${this.cssPrefix}-media-item`;
     if ((fileWidth / imgWidth) * imgHeight > fileHeight) {
@@ -229,7 +260,13 @@ class WaveList extends TextureUI {
     } else {
       imgStyle = `height:${imgHeight}px;`;
     }
-    imgStyle += `display:flex;align-items:center;justify-content:center;`;
+    if (src) {
+      audioHtml = `<audio src="${src}" style="${audioStyle}" controls="controls" title="${fileName}" alt="${fileName}"></audio>`;
+      imgStyle += `display:flex;align-items:end;justify-content:center;`;
+    } else {
+      audioHtml = `${this.makeSvgIcon(['active'], 'music', false)}`;
+      imgStyle += `display:flex;align-items:center;justify-content:center;`;
+    }
     html = `<div style="${imgStyle}">${audioHtml}</div>`;
     html += `<div style="${labelStyle}">${fileName}</div>`;
     html += `<div style="${btnStyle}">`;
@@ -252,6 +289,26 @@ class WaveList extends TextureUI {
     // this.datasource.on({
     //   'transitions:loaded': onTransitionsLoaded,
     // });
+  }
+
+  _onWaveActive({ item }) {
+    if (this.actived) {
+      this.setActivedWaveItem(item);
+    }
+  }
+
+  _onWaveDeactive({ item }) {
+    if (this.activedItem === item) {
+      this.setActivedWaveItem(null);
+    }
+  }
+
+  _onWaveScaled({ range, context }) {
+    const { elemId } = context;
+    const parser = this.items[elemId];
+    if (parser) {
+      parser.range = range;
+    }
   }
 
   activeMenu() {
@@ -346,6 +403,17 @@ class WaveList extends TextureUI {
     const loadElement = this.mediaBody.querySelector(cls('.media-load-btn'));
     loadElement.addEventListener('change', onFileChanged);
     this.datasource.on('audio:loaded', onLoaded);
+  }
+
+  addEvents() {
+    const onWaveActive = this._onWaveActive.bind(this);
+    const onWaveDeactive = this._onWaveDeactive.bind(this);
+    const onWaveScaled = this._onWaveScaled.bind(this);
+    this.getUI().timeLine.on({
+      'slip:wave:selected': onWaveActive,
+      'slip:wave:deselected': onWaveDeactive,
+      'track:wave:scale': onWaveScaled,
+    });
   }
 
   getTextureHtml() {

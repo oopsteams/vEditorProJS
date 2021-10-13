@@ -45,7 +45,7 @@ class Panel extends Component {
         if (!this.changeCache.version) {
           this.checkInCache(0);
         }
-        this.disable();
+        // this.disable();
         resolve(fObj);
       });
       canvas.add(group);
@@ -186,6 +186,7 @@ class Panel extends Component {
       'track:add': this._handlers.itemAdd,
       'track:item:scale': this._handlers.itemChanged,
       'track:item:changed': this._handlers.itemChanged,
+      'track:wave:scale': this._handlers.itemChanged,
     });
   }
 
@@ -195,6 +196,7 @@ class Panel extends Component {
       'track:add': this._handlers.itemAdd,
       'track:item:scale': this._handlers.itemChanged,
       'track:item:changed': this._handlers.itemChanged,
+      'track:wave:scale': this._handlers.itemChanged,
     });
   }
 

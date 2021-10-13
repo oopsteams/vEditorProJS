@@ -184,10 +184,10 @@ class Track extends Component {
 
   setupSlip() {
     this.slipWinndow.setup();
-    const onDeselected = this._onSlipDeselected.bind(this);
-    const onSlipSelected = this._onSlipSelected.bind(this);
-    this.slipWinndow.on({ 'slip:deselected': onDeselected });
-    this.slipWinndow.on({ 'slip:selected': onSlipSelected });
+    // const onDeselected = this._onSlipDeselected.bind(this);
+    // const onSlipSelected = this._onSlipSelected.bind(this);
+    // this.slipWinndow.on({ 'slip:deselected': onDeselected });
+    // this.slipWinndow.on({ 'slip:selected': onSlipSelected });
   }
 
   active(item) {

@@ -90,7 +90,7 @@ class TrackTransition {
         this.xyRange[1] = fObj.left + fObj.width;
         fObj.setCoords();
         fObj.bringToFront();
-        console.log('add new transition ok!!!');
+        // console.log('add new transition ok!!!');
         resolve(fObj);
       });
       this.getTimeline().add(this.itemPanel);
@@ -135,7 +135,7 @@ class TrackTransition {
       // });
       this.itemPanel.setCoords();
       this.getTimeline().updateActiveObj(this.itemPanel);
-      console.log('this.version:', this.version, 'panel left:', this.itemPanel.left);
+      // console.log('this.version:', this.version, 'panel left:', this.itemPanel.left);
     }
   }
 
@@ -151,7 +151,7 @@ class TrackTransition {
     this.getCanvas().remove(this.itemPanel);
     this.track.remove(this);
     this.track.timeline.fire('track:transition:dispose', { transition: this.context });
-    console.log('will set null context.trackItem:', this.context.trackItem);
+    // console.log('will set null context.trackItem:', this.context.trackItem);
     this.context.trackItem = null;
   }
 

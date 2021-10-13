@@ -1,7 +1,7 @@
 import fabric from 'fabric';
-import snippet from 'tui-code-snippet';
+// import snippet from 'tui-code-snippet';
 import { winControls } from '@/timeline/controls';
-const { CustomEvents } = snippet;
+// const { CustomEvents } = snippet;
 class WaveSlipWindow {
   constructor(track) {
     this.name = 'textSlipWindow';
@@ -54,7 +54,7 @@ class WaveSlipWindow {
     this.win.bringToFront();
     this.getTimeline().updateActiveObj(this.win);
     this.target.on({
-      'track:item:move': this._handlers.targetmove,
+      'track:wave:move': this._handlers.targetmove,
     });
   }
 
@@ -62,7 +62,7 @@ class WaveSlipWindow {
     this.win.visible = false;
     if (this.target) {
       this.target.off({
-        'track:item:move': this._handlers.targetmove,
+        'track:wave:move': this._handlers.targetmove,
       });
       this.win.sendToBack();
     }
@@ -109,11 +109,16 @@ class WaveSlipWindow {
       selected() {
         self._isSelected = true;
         self._shapeObj = this;
+        if (self.target) {
+          self.track.timeline.fire('slip:wave:selected', { item: self.target });
+        }
       },
       deselected() {
         self._isSelected = false;
         self._shapeObj = null;
-        self.fire('slip:deselected', {});
+        if (self.target) {
+          self.track.timeline.fire('slip:wave:deselected', { item: self.target });
+        }
       },
       modifiedInGroup(activeSelection) {
         console.log('modifiedInGroup in activeSelection:', activeSelection);
@@ -225,6 +230,6 @@ class WaveSlipWindow {
   }
 }
 
-CustomEvents.mixin(WaveSlipWindow);
+// CustomEvents.mixin(WaveSlipWindow);
 
 export default WaveSlipWindow;

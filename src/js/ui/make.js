@@ -81,8 +81,7 @@ class Make extends TextureUI {
     // this.setup();
     this.addEvents();
     this.buildActions();
-    // this.fixMenus = ['music'];
-    this.fixMenus = ['music', 'split', 'transition', 'separate', 'filter', 'animation'];
+    // this.fixMenus = ['music', 'split', 'transition', 'separate', 'filter', 'animation'];
   }
 
   getTextureHtml() {
@@ -373,10 +372,12 @@ class Make extends TextureUI {
           if (parser) {
             this.datasource.fire('track:item:remove', { section });
           }
-          if (!track.isEmpty()) {
-            this.fixMenus.splice(0, 1);
+          if (track.isEmpty()) {
+            // this.fixMenus.splice(0, 1);
+            this.removeSubMenu('music');
           } else {
-            this.fixMenus.push('music');
+            // this.fixMenus.push('music');
+            this.addSubMenu('music');
           }
         } else if (this.activedItem.name === 'transition') {
           const { activedItem } = this;
@@ -419,31 +420,41 @@ class Make extends TextureUI {
     });
   }
 
+  _onWaveActive({ item }) {
+    if (this.actived) {
+      this.waveList.setActivedWaveItem(item);
+      this.changeStandbyMode();
+      this.waveList.changeStartMode();
+    }
+  }
+
   activeMenu({ item, isLast }) {
-    const menuNames = [];
-    this.fixMenus.forEach((fm) => {
-      menuNames.push(fm);
-    });
+    const menuNames = ['music'];
     if (item.name === 'item') {
       menuNames.push('delete');
       if (!isLast) {
         menuNames.push('transition');
       }
-      this.disableSubmenus(menuNames);
+      this.addSubMenu(menuNames);
+      // this.disableSubmenus(menuNames);
     } else if (item.name === 'transition') {
       menuNames.push('delete');
-      this.disableSubmenus(menuNames);
+      // this.disableSubmenus(menuNames);
+      this.addSubMenu(menuNames);
     }
+    console.log('activeMenu menuNames:', menuNames);
   }
 
   addEvents() {
     const onItemScaled = this._onItemScaled.bind(this);
     const onItemSorted = this._onItemSorted.bind(this);
     const onTransitionDispose = this._onTransitionDispose.bind(this);
-    this.ui.timeLine.on({
+    const onWaveActive = this._onWaveActive.bind(this);
+    this.getUI().timeLine.on({
       'track:item:scale': onItemScaled,
       'track:item:sorted': onItemSorted,
       'track:transition:dispose': onTransitionDispose,
+      'slip:wave:selected': onWaveActive,
     });
   }
 }

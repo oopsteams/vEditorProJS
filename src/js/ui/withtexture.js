@@ -37,6 +37,7 @@ class TextureUI extends Submenu {
     this.subMenuElement = subMenuElement;
     this.actived = false;
     this.actions = {};
+    this.fixMenus = [];
     this.setup();
     this.disableSubmenus();
     this.addTrackItemEvents();
@@ -52,6 +53,26 @@ class TextureUI extends Submenu {
     this.mediaBody = this.textureLayer.querySelector(mediaBodyCss);
     console.log('mediaBody:', this.mediaBody);
     this.adjustUI();
+  }
+
+  addSubMenu(names) {
+    names.forEach((name) => {
+      const idx = this.fixMenus.indexOf(name);
+      if (idx < 0) {
+        this.fixMenus.push(name);
+      }
+    });
+    this.disableSubmenus(this.fixMenus);
+  }
+
+  removeSubMenu(names) {
+    names.forEach((name) => {
+      const idx = this.fixMenus.indexOf(name);
+      if (idx >= 0) {
+        this.fixMenus.splice(idx, 1);
+      }
+    });
+    this.disableSubmenus(this.fixMenus);
   }
 
   disableSubmenus(enabledNames) {

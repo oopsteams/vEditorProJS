@@ -186,9 +186,16 @@ class TimeLine {
   }
 
   addWave(dur, files, context, cb) {
-    this.wavetrack.addWave(0, dur, files, this.previewItemWidth, context).then((wave) => {
-      console.log('wave add ok:', wave);
-      if (cb) {
+    this.wavetrack.addWave(0, dur, files, this.previewItemWidth, context).then(() => {
+      const waveDuration = this.wavetrack.totalDuration();
+      const trackDuration = this.track.totalDuration();
+      if (waveDuration > trackDuration) {
+        this.changeDuration(waveDuration).then(() => {
+          if (cb) {
+            cb();
+          }
+        });
+      } else if (cb) {
         cb();
       }
     });
@@ -212,6 +219,11 @@ class TimeLine {
 
   getPanel() {
     return this.getComponent(tlComponentNames.PANEL);
+  }
+
+  getCurrentTime() {
+    const progress = this.getCurrentProgress();
+    return this.duration * progress;
   }
 
   changeTime(time) {

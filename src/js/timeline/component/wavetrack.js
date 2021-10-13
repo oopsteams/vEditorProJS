@@ -28,10 +28,13 @@ class WaveTrack extends Component {
       poschanged: this._onPosChanged.bind(this),
       tickschanged: this._onTicksChanged.bind(this),
       timechanged: this._onTimeChanged.bind(this),
+      focusItem: this._onFocusItem.bind(this),
+      syncTimeChanged: this._onTimeChanged.bind(this),
     };
     this.changeCache = {};
     this.start();
     this.counter = 0;
+    this.setupSlip();
   }
 
   getBoxHeight() {
@@ -83,30 +86,30 @@ class WaveTrack extends Component {
     this.currentItem = item;
   }
 
-  remove(ti) {
-    let index;
-    for (let i = 0; i < this.groups.length; i += 1) {
-      if (this.groups[i] === ti) {
-        index = i;
-        break;
+  hasItem() {
+    return this.groups.length > 0;
+  }
+
+  remove(item) {
+    const idx = this.groups.indexOf(item);
+    if (idx >= 0) {
+      this.groups.splice(idx, 1);
+      const _item = this.hasItem();
+      if (!_item) {
+        this.setCurrentItem(null);
+        this.slipWinndow.hide();
       }
-    }
-    if (index) {
-      ti.dispose();
-      delete this.groups[index];
     }
   }
 
   setupSlip() {
     this.slipWinndow.setup();
-    const onDeselected = this._onSlipDeselected.bind(this);
-    const onSlipSelected = this._onSlipSelected.bind(this);
-    this.slipWinndow.on({ 'slip:deselected': onDeselected });
-    this.slipWinndow.on({ 'slip:selected': onSlipSelected });
   }
 
   active(item) {
     this.setCurrentItem(item);
+    const isLast = item === this.groups[this.groups.length - 1];
+    this.timeline.fire('track:wave:active', { item, isLast });
     this.slipWinndow.show(item);
   }
 
@@ -115,6 +118,8 @@ class WaveTrack extends Component {
       // [eventNames.PANEL_POS_CHANGED]: this._handlers.timechanged,
       // [eventNames.PANEL_TICKS_CHANGED]: this._handlers.tickschanged,
       [eventNames.TIME_CHANGED]: this._handlers.timechanged,
+      'track:wave:focus': this._handlers.focusItem,
+      [eventNames.SYNC_TIME_CHANGED]: this._handlers.syncTimeChanged,
     });
   }
 
@@ -123,14 +128,6 @@ class WaveTrack extends Component {
     this.timeline.off({
       [eventNames.TIME_CHANGED]: this._handlers.timechanged,
     });
-  }
-
-  _onSlipDeselected() {
-    console.log('_onSlipDeselected in....');
-  }
-
-  _onSlipSelected() {
-    console.log('_onSlipSelected in....');
   }
 
   _onPosChanged({ progress }) {
@@ -169,6 +166,21 @@ class WaveTrack extends Component {
     this.groups.forEach((g) => {
       g.timeChanged(x);
     });
+  }
+
+  _onFocusItem({ elemId }) {
+    const currentTime = this.timeline.getCurrentTime();
+    for (let i = 0, n = this.groups.length; i < n; i += 1) {
+      const waveItem = this.groups[i];
+      if (waveItem.context.elemId === elemId) {
+        const _end = this.start + this.getDuration();
+        if (currentTime < this.start || currentTime > _end) {
+          this.timeline.changeTime(waveItem.start);
+          this.active(waveItem);
+        }
+        break;
+      }
+    }
   }
 
   checkInCache(newProgress) {
@@ -355,33 +367,31 @@ class WaveTrack extends Component {
 
   _onFabricMouseDown() {}
 
-  _onFabricMouseMove(fEvent) {
-    const canvas = this.getCanvas();
-    const pointer = canvas.getPointer(fEvent.e);
-    const startPointX = this._startPoint.x;
-    const startPointY = this._startPoint.y;
-    const width = startPointX - pointer.x;
-    const height = startPointY - pointer.y;
-    const shape = this._shapeObj;
-
-    if (!shape) {
-      // this._shapeObj.set({
-      //   isRegular: this._withShiftKey,
-      // });
-      console.log('width:', width, ',height:', height);
-    }
+  _onFabricMouseMove() {
+    // const canvas = this.getCanvas();
+    // const pointer = canvas.getPointer(fEvent.e);
+    // const startPointX = this._startPoint.x;
+    // const startPointY = this._startPoint.y;
+    // const width = startPointX - pointer.x;
+    // const height = startPointY - pointer.y;
+    // const shape = this._shapeObj;
+    // if (!shape) {
+    //   // this._shapeObj.set({
+    //   //   isRegular: this._withShiftKey,
+    //   // });
+    //   console.log('width:', width, ',height:', height);
+    // }
   }
 
   _onFabricMouseUp() {
-    const canvas = this.getCanvas();
+    // const canvas = this.getCanvas();
     // const startPointX = this._startPoint.x;
     // const startPointY = this._startPoint.y;
     // const shape = this._shapeObj;
-
-    canvas.off({
-      'mouse:move': this._handlers.mousemove,
-      'mouse:up': this._handlers.mouseup,
-    });
+    // canvas.off({
+    //   'mouse:move': this._handlers.mousemove,
+    //   'mouse:up': this._handlers.mouseup,
+    // });
   }
 }
 
