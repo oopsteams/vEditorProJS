@@ -5,6 +5,7 @@ import { getSelector, cls, cssPrefix } from '@/util';
 import mainContainer from '@/ui/template/mainContainer';
 import controls from './ui/template/controls';
 import topMenu from './ui/template/topMenu';
+import resultHtml from './ui/template/result';
 
 import Locale from '@/ui/locale/locale';
 import Theme from '@/ui/theme/theme';
@@ -60,7 +61,7 @@ class Ui {
 
     this._makeSubMenu();
     this._attachTimeLineEvent();
-    this._makeMainMenuElement('load');
+    this._makeMainMenuElement('check');
     // this._attachHistoryEvent();
     // this._attachZoomEvent();
     this._attachDatasourceEvent();
@@ -97,8 +98,8 @@ class Ui {
         menu: [
           // 'selection',
           'make',
-          'imitate',
-          'amake',
+          // 'imitate',
+          // 'amake',
           // 'storage',
         ],
         initMenu: '',
@@ -159,9 +160,6 @@ class Ui {
       locale: this._locale,
       biImage: this.theme.getStyle('common.bi'),
       cStyle: this.theme.getStyle('control'),
-      loadButtonStyle: this.theme.getStyle('loadButton'),
-      downloadButtonStyle: this.theme.getStyle('downloadButton'),
-      uploadButtonStyle: this.theme.getStyle('uploadButton'),
       menuBarPosition: this.options.menuBarPosition,
       cssPrefix,
     });
@@ -278,21 +276,32 @@ class Ui {
     }
   }
 
-  _makeMainMenuElement(
+  _makeMainMenuElement() {
+    /*
     menuName,
     useIconTypes = ['normal', 'active', 'hover'],
     menuType = 'normal'
-  ) {
-    const btnElement = document.createElement('li');
-    const menuItemHtml = this.theme.makeMenSvgIconSet(useIconTypes, menuName);
-    this._addTooltipAttribute(btnElement, menuName);
-    btnElement.className = `tie-btn-${menuName} ${cls('item')} ${menuType}`;
-    btnElement.innerHTML = menuItemHtml;
-    this._mainMenuBarElement.appendChild(btnElement);
-
+    */
+    this._mainMenuBarElement.innerHTML = resultHtml({
+      locale: this._locale,
+      makeSvgIcon: this.theme.makeMenSvgIconSet.bind(this.theme),
+      cssPrefix,
+    });
+    this.deleteAllElement = this._mainMenuBarElement.querySelector('li.tie-btn-deleteall');
+    // this.deleteAllElement._display = this.deleteAllElement.style.display;
+    // this.deleteAllElement.style.display = 'none';
+    this.resultElement = this._mainMenuBarElement.querySelector('li.tie-btn-play');
+    this.resultElement._display = this.resultElement.style.display;
+    this.resultElement.style.display = 'none';
+    const btnElement = this._mainMenuBarElement.querySelector('li.tie-btn-apply');
+    const exportBtnElement = this._mainMenuBarElement.querySelector('li.tie-btn-export');
+    const exportTemplate = this._exportTemplate.bind(this);
+    exportBtnElement.addEventListener('click', exportTemplate);
     const onExport = this._onExport.bind(this);
     btnElement.addEventListener('click', onExport);
     this.exportBtnElement = btnElement;
+    const deleteAll = this._deleteAll.bind(this);
+    this.deleteAllElement.addEventListener('click', deleteAll);
     this.hideExport();
     this.timeLine.on({
       'track:remove': ({ track }) => {
@@ -309,17 +318,34 @@ class Ui {
   }
 
   hideExport() {
+    // const allItems = this._mainMenuBarElement.querySelector(`li.${this.cssPrefix}-item`);
+    // allItems.forEach((item) => {
+    //   item.style.display = 'none';
+    // });
     this.exportBtnElement.style.display = 'none';
+    this._mainMenuBarElement.style.display = 'none';
+    this.resultElement.style.display = 'none';
   }
 
   showExport() {
     this.exportBtnElement.style.display = 'inline-block';
+    this._mainMenuBarElement.style.display = 'table-cell';
+  }
+
+  _deleteAll() {
+    this.timeLine.clearTracks();
+    this.hideExport();
   }
 
   _onExport() {
     console.log('ready to export video....');
     this.timeLine.lock();
     this.datasource.fire('frame:export', {});
+  }
+
+  _exportTemplate() {
+    this.timeLine.lock();
+    this.datasource.fire('frame:template:export', {});
   }
 
   getEditorArea() {
@@ -430,7 +456,7 @@ class Ui {
       this._buttonElements[menuName].classList.add('active');
       this._mainElement.classList.add(`${CSS_PREFIX}-menu-${menuName}`);
       this.submenu = menuName;
-      console.log('this.submenu:', this.submenu, ',this[this.submenu]=>', this[this.submenu]);
+      // console.log('this.submenu:', this.submenu, ',this[this.submenu]=>', this[this.submenu]);
       this[this.submenu].changeStartMode();
     }
 
@@ -439,18 +465,49 @@ class Ui {
 
   _attachTimeLineEvent() {
     const timeChange = this._onTimeChanged.bind(this);
-    this.timeLine.on({ [eventNames.TIME_CHANGED]: timeChange });
+    this.timeLine.on({
+      [eventNames.TIME_CHANGED]: timeChange,
+      'timeline:clear:all': () => {
+        this.datasource.fire('timeline:clear:all', {});
+      },
+    });
   }
 
   _attachDatasourceEvent() {
     const exportSuccess = this._onExportedOk.bind(this);
+    const templateExportSuccess = this._onTemplateExportedOk.bind(this);
     this.datasource.on({
       'frame:export:success': exportSuccess,
+      'frame:template:export:success': templateExportSuccess,
     });
   }
 
-  _onExportedOk() {
+  _onTemplateExportedOk(result) {
     this.timeLine.unlock();
+    if (!result) {
+      return;
+    }
+    console.log('_onTemplateExportedOk result:', result);
+  }
+
+  _onExportedOk(result) {
+    this.timeLine.unlock();
+    if (!result) {
+      return;
+    }
+    const { file } = result;
+    if (file) {
+      const { url, name, width, height } = file;
+      const a = this.resultElement.querySelector('a');
+      if (a) {
+        a.href = url;
+        const txt = this._locale.localize('Download');
+        a.textContent = `${txt}[${name}].`;
+        a.download = name;
+      }
+      this.resultElement.style.display = this.resultElement._display;
+      console.log('_onExportedOk width:', width, ',height:', height);
+    }
   }
 
   _onTimeChanged(params) {

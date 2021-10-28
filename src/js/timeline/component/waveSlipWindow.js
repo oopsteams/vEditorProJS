@@ -4,7 +4,7 @@ import { winControls } from '@/timeline/controls';
 // const { CustomEvents } = snippet;
 class WaveSlipWindow {
   constructor(track) {
-    this.name = 'textSlipWindow';
+    this.name = 'waveSlipWindow';
     this.track = track;
     this._handlers = {
       mousedown: this._onFabricMouseDown.bind(this),
@@ -110,14 +110,16 @@ class WaveSlipWindow {
         self._isSelected = true;
         self._shapeObj = this;
         if (self.target) {
-          self.track.timeline.fire('slip:wave:selected', { item: self.target });
+          const isLast = self.track.isLastItem(self.target);
+          self.track.timeline.fire('slip:wave:selected', { item: self.target, isLast });
         }
       },
       deselected() {
         self._isSelected = false;
         self._shapeObj = null;
         if (self.target) {
-          self.track.timeline.fire('slip:wave:deselected', { item: self.target });
+          const isLast = self.track.isLastItem(self.target);
+          self.track.timeline.fire('slip:wave:deselected', { item: self.target, isLast });
         }
       },
       modifiedInGroup(activeSelection) {

@@ -5,6 +5,9 @@ import mediaHtml from '@/ui/template/texture/media';
 import itemHtml from '@/ui/template/texture/mediaitem';
 import Transitions from '@/ui/transitions';
 import WaveList from './wavelist';
+import TextControl from './textcontrol';
+import AnimationControl from './animatecontrol';
+import EmptyParser from './tools/emptyparser';
 
 import { isSupportFileApi, cls } from '@/util';
 // import { eventNames, selectorNames } from '@/consts';
@@ -45,7 +48,7 @@ class Make extends TextureUI {
     this.parsers = {};
     this.previewItemWidth = previewItemWidth;
     this.previewItemHeight = previewItemHeight;
-    this.transitions = new Transitions(subMenuElement, {
+    const options = {
       locale,
       makeSvgIcon,
       menuBarPosition,
@@ -58,21 +61,11 @@ class Make extends TextureUI {
       previewItemWidth,
       previewItemHeight,
       parent: this,
-    });
-    this.waveList = new WaveList(subMenuElement, {
-      locale,
-      makeSvgIcon,
-      menuBarPosition,
-      usageStatistics,
-      cssPrefix,
-      theme,
-      textureLayer,
-      textureAspect,
-      datasource,
-      previewItemWidth,
-      previewItemHeight,
-      parent: this,
-    });
+    };
+    this.animationControl = new AnimationControl(subMenuElement, options);
+    this.transitions = new Transitions(subMenuElement, options);
+    this.waveList = new WaveList(subMenuElement, options);
+    this.textTool = new TextControl(subMenuElement, options);
     this.subMenus = [];
     this.subMenus.push(this.transitions);
     this._els = {
@@ -81,6 +74,7 @@ class Make extends TextureUI {
     // this.setup();
     this.addEvents();
     this.buildActions();
+    this.initData();
     // this.fixMenus = ['music', 'split', 'transition', 'separate', 'filter', 'animation'];
   }
 
@@ -91,6 +85,12 @@ class Make extends TextureUI {
       makeSvgIcon: this.makeSvgIcon,
       cssPrefix: this.cssPrefix,
     });
+  }
+
+  initData() {
+    const parser = new EmptyParser(this.previewItemWidth, this.previewItemHeight);
+    const elem = this._appendItem(null, 0, 0, '');
+    this.parsers[elem] = parser;
   }
 
   adjustUI() {
@@ -155,26 +155,6 @@ class Make extends TextureUI {
     this.iteratorLoad(() => {
       console.log('Nothing Done!!!!');
     });
-    // if (file && file.name) {
-    //   const { name } = file;
-    //   console.log('onFileChanged file:', file);
-    //   const parser = this._getParserByName(name);
-    //   if (parser) {
-    //     info = 'File[] had imported!';
-    //     info = info.replace('[]', `[${name}]`);
-    //     alert(info);
-    //   } else {
-    //     const { type } = file;
-    //     if (type.indexOf('video') >= 0) {
-    //       this.datasource.fire('video:load', { file });
-    //     } else if (type.indexOf('image') >= 0) {
-    //       this.datasource.fire('image:load', { file });
-    //     } else {
-    //       info = 'File Type is Error';
-    //       alert(info);
-    //     }
-    //   }
-    // }
   }
 
   _getParserByName(name) {
@@ -242,14 +222,6 @@ class Make extends TextureUI {
       const quality = 20;
       const vW = parser.metadata.width;
       const vH = parser.metadata.height;
-      // const aspect = this.previewItemWidth / this.previewItemHeight;
-      // if (vW / vH > aspect) {
-      //   outWidth = this.previewItemWidth;
-      //   outHeight = Math.floor((outWidth * vH) / vW);
-      // } else {
-      //   outHeight = this.previewItemHeight;
-      //   outWidth = Math.floor((outHeight * vW) / vH);
-      // }
       outWidth = this.previewItemWidth;
       outHeight = Math.floor((outWidth * vH) / vW);
       parser.parseKeyFrameImages(outWidth, outHeight, quality, onProgress).then((result) => {
@@ -288,6 +260,7 @@ class Make extends TextureUI {
     let imgStyle = '',
       labelStyle,
       btnStyle,
+      imgHtml,
       html;
     const onAddBtnClick = this._onAddBtnClick.bind(this);
     const boxSize = 2;
@@ -305,12 +278,18 @@ class Make extends TextureUI {
     layerItem.id = `mediaItem_${this.counter}`;
     layerItem.setAttribute('id', layerItem.id);
     layerItem.className = `${this.cssPrefix}-media-item`;
-    if ((fileWidth / imgWidth) * imgHeight > fileHeight) {
-      imgStyle = `width:${imgWidth}px;`;
+    const imgWrapStyle = `display:flex;align-items:center;justify-content:center;`;
+    if (src) {
+      if ((fileWidth / imgWidth) * imgHeight > fileHeight) {
+        imgStyle = `width:${imgWidth}px;`;
+      } else {
+        imgStyle = `height:${imgHeight}px;`;
+      }
+      imgHtml = `<img src="${src}" style="${imgStyle}" title="${fileName}" alt="${fileName}" />`;
     } else {
-      imgStyle = `height:${imgHeight}px;`;
+      imgHtml = `${this.locale.localize('Empty')}`;
     }
-    html = `<div><img src="${src}" style="${imgStyle}" title="${fileName}" alt="${fileName}" /></div>`;
+    html = `<div style="${imgWrapStyle}">${imgHtml}</div>`;
     html += `<div style="${labelStyle}">${fileName}</div>`;
     html += `<div style="${btnStyle}">`;
     html += `<span style="float:right;" class="${this.cssPrefix}-menu add">`;
@@ -350,15 +329,13 @@ class Make extends TextureUI {
 
   getSectionByItem(trackItem) {
     console.log('getSectionByItem trackItem:', trackItem);
-    const { section } = trackItem.context;
-    // const parser = this.parsers[elemId];
-    // if (parser) {
-    //   const { section } = parser;
+    if (trackItem) {
+      const { section } = trackItem.context;
 
-    //   return section;
-    // }
+      return section;
+    }
 
-    return section;
+    return null;
   }
 
   buildActions() {
@@ -374,10 +351,10 @@ class Make extends TextureUI {
           }
           if (track.isEmpty()) {
             // this.fixMenus.splice(0, 1);
-            this.removeSubMenu('music');
+            this.removeSubMenu(['music', 'transition', 'text', 'transition']);
           } else {
             // this.fixMenus.push('music');
-            this.addSubMenu('music');
+            this.addSubMenu(['music']);
           }
         } else if (this.activedItem.name === 'transition') {
           const { activedItem } = this;
@@ -392,7 +369,7 @@ class Make extends TextureUI {
         if (parser) {
           // const { section } = parser;
           this.transitions.setTrackItem(activedItem);
-          this.ui.timeLine.track.lock();
+          // this.ui.timeLine.track.lock();
           this.changeStandbyMode();
           this.transitions.changeStartMode();
         }
@@ -405,12 +382,30 @@ class Make extends TextureUI {
         this.changeStandbyMode();
         this.waveList.changeStartMode();
       },
+      text: () => {
+        const { activedItem } = this;
+        console.log('text menu...');
+        this.textTool.setTrackItem(activedItem);
+        this.changeStandbyMode();
+        this.textTool.changeStartMode();
+      },
+      animation: () => {
+        const { activedItem } = this;
+        console.log('animation menu...');
+        this.animationControl.setTrackItem(activedItem);
+        this.changeStandbyMode();
+        this.animationControl.changeStartMode();
+      },
     };
   }
 
   _changeStartMode() {
     if (this.ui.timeLine) {
       this.ui.timeLine.unlock();
+      console.log('_changeStartMode track:', this.ui.timeLine.track);
+      if (this.ui.timeLine.track) {
+        this.ui.timeLine.track.focus();
+      }
     }
   }
 
@@ -428,12 +423,18 @@ class Make extends TextureUI {
     }
   }
 
+  _onItemDeactive() {}
+
   activeMenu({ item, isLast }) {
     const menuNames = ['music'];
     if (item.name === 'item') {
       menuNames.push('delete');
+      menuNames.push('text');
+      menuNames.push('animation');
       if (!isLast) {
         menuNames.push('transition');
+      } else {
+        this.removeSubMenu(['transition']);
       }
       this.addSubMenu(menuNames);
       // this.disableSubmenus(menuNames);
@@ -441,6 +442,7 @@ class Make extends TextureUI {
       menuNames.push('delete');
       // this.disableSubmenus(menuNames);
       this.addSubMenu(menuNames);
+      this.removeSubMenu(['transition', 'animation']);
     }
     console.log('activeMenu menuNames:', menuNames);
   }
@@ -450,11 +452,16 @@ class Make extends TextureUI {
     const onItemSorted = this._onItemSorted.bind(this);
     const onTransitionDispose = this._onTransitionDispose.bind(this);
     const onWaveActive = this._onWaveActive.bind(this);
+    const onItemActive = this._onItemActive.bind(this);
+    const onItemDeactive = this._onItemDeactive.bind(this);
     this.getUI().timeLine.on({
       'track:item:scale': onItemScaled,
       'track:item:sorted': onItemSorted,
+      'track:item:active': onItemActive,
       'track:transition:dispose': onTransitionDispose,
       'slip:wave:selected': onWaveActive,
+      'slip:item:selected': onItemActive,
+      'slip:item:deselected': onItemDeactive,
     });
   }
 }

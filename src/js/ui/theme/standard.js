@@ -12,7 +12,7 @@ export default {
   // header
   'header.backgroundImage': 'none',
   'header.backgroundColor': 'transparent',
-  'header.border': '0px',
+  // 'header.border': '0px',
 
   // load button
   'loadButton.backgroundColor': '#fff',

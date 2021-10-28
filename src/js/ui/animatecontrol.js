@@ -1,6 +1,6 @@
 import TextureUI from '@/ui/withtexture';
-import transitionsHtml from '@/ui/template/texture/transitions';
-import templateHtml from '@/ui/template/submenu/transitions';
+import animationsHtml from '@/ui/template/texture/animations';
+import templateHtml from '@/ui/template/submenu/animationsmenu';
 import itemHtml from '@/ui/template/texture/mediaitem';
 import { cls } from '@/util';
 // import { eventNames, selectorNames } from '@/consts';
@@ -8,7 +8,7 @@ const minItemWidth = 120;
 const maxLabelHeight = 20;
 const ItemBorderWeight = 4;
 
-class Transitions extends TextureUI {
+class AnimationControl extends TextureUI {
   constructor(
     subMenuElement,
     {
@@ -26,7 +26,7 @@ class Transitions extends TextureUI {
   ) {
     super(subMenuElement, {
       locale,
-      name: 'transition',
+      name: 'animation',
       makeSvgIcon,
       menuBarPosition,
       templateHtml,
@@ -49,19 +49,34 @@ class Transitions extends TextureUI {
     this.addEvents();
   }
 
+  _changeStartMode() {
+    this.disableSubmenus(['back']);
+    this.datasource.fire('animations:load', {});
+    this.showMainLayer();
+  }
+
+  _onAnimationsLoaded({ data }) {
+    if (data) {
+      data.forEach((animate) => {
+        if (!this.existAnimationData(animate)) {
+          const elem = this._appendItem('#', minItemWidth, minItemWidth / 2, animate.label);
+          this.items[elem] = animate;
+        }
+      });
+    }
+  }
+
   buildActions() {
     this.actions = {
       back: () => {
         this.changeStandbyMode();
         this.parent.changeStartMode();
         this.ui.changeMenu(this.parent.name);
-        this.ui.timeLine.unlock();
       },
       delete: () => {
-        if (this.activedTransition) {
-          this.remove(this.activedTransition.context);
-          this.activedTransition.dispose();
-          this.removeSubMenu(['delete']);
+        if (this.activedAnimation) {
+          this.remove(this.activedAnimation.context);
+          this.activedAnimation.dispose();
         }
       },
     };
@@ -70,8 +85,7 @@ class Transitions extends TextureUI {
   _onItemDeactive({ item }) {
     if (this.actived) {
       if (item) {
-        // this.actions.back();
-        console.log('transitions _onItemDeactive item:', item);
+        console.log('animations _onItemDeactive item:', item);
       }
     }
   }
@@ -91,25 +105,46 @@ class Transitions extends TextureUI {
     }
   }
 
-  _onItemActive({ item, isLast }) {
+  updateActivedAnimation(item) {
+    this.activedAnimation = item;
+    if (item) {
+      this.addSubMenu(['delete']);
+      const { elemId } = item.context;
+      this.activeElement(elemId);
+    } else {
+      this.removeSubMenu(['delete']);
+      this.activeElement(null);
+    }
+  }
+
+  _onAnimationItemSelected({ item }) {
+    this.updateActivedAnimation(item);
+  }
+
+  _onAnimationItemUnselected({ item }) {
+    if (item === null || this.activedAnimation === item) {
+      this.updateActivedAnimation(null);
+    }
+  }
+
+  _onItemActive({ item }) {
     if (this.actived) {
       const menuNames = ['back'];
       this.removeSubMenu(['delete']);
       if (item.name === 'item') {
-        if (!isLast) {
-          this.showMainLayer();
-          this.setTrackItem(item);
-        } else {
-          this.removeSubMenu(['transition']);
-          this.hideMainLayer();
-        }
+        this.showMainLayer();
+        this.setTrackItem(item);
         this.addSubMenu(menuNames);
       } else if (item.name === 'transition') {
-        this.activedTransition = item;
+        this.activedAnimation = null;
+        this.hideMainLayer();
+        this.addSubMenu(menuNames);
+      } else if (item.name === 'animation') {
+        this.activedAnimation = item;
         menuNames.push('delete');
         // this.disableSubmenus(menuNames);
         this.addSubMenu(menuNames);
-        const { trackItem } = this.activedTransition.context;
+        const { trackItem } = this.activedAnimation.context;
         if (trackItem) {
           this.setTrackItem(trackItem);
         }
@@ -118,23 +153,11 @@ class Transitions extends TextureUI {
   }
 
   setTrackItem(trackItem) {
-    let elemId;
     this.trackItem = trackItem;
-    const { transition } = trackItem;
-    if (transition) {
-      elemId = transition.context.elemId;
-      console.log('setTrackItem elemId:', elemId);
-    }
-    this.activeElement(elemId);
+    this.getUI().timeLine.animationtrack.focusByTrackItem(this.trackItem);
   }
 
-  _changeStartMode() {
-    this.disableSubmenus(['back']);
-    this.datasource.fire('transitions:load', {});
-    this.showMainLayer();
-  }
-
-  existTransitionData(dataItem) {
+  existAnimationData(dataItem) {
     const { category, mode } = dataItem;
     for (const elemId in this.items) {
       if (this.items[elemId]) {
@@ -146,18 +169,6 @@ class Transitions extends TextureUI {
     }
 
     return false;
-  }
-
-  _onTransitionsLoaded({ data }) {
-    if (data) {
-      data.forEach((tran) => {
-        if (!this.existTransitionData(tran)) {
-          const elem = this._appendItem('#', minItemWidth, minItemWidth / 2, tran.label);
-          // console.log('_onTransitionsLoaded elem:', elem);
-          this.items[elem] = tran;
-        }
-      });
-    }
   }
 
   copyDict(obj) {
@@ -181,19 +192,50 @@ class Transitions extends TextureUI {
     } else {
       return;
     }
+    if (this.activedAnimation) {
+      const { elemId } = this.activedAnimation.context;
+      if (dataset.id === elemId) {
+        return;
+      }
+    }
     const elemId = dataset.id;
-    const transitionItem = this.items[elemId];
-    transitionItem.elemId = elemId;
-    transitionItem.trackItem = this.trackItem;
+    const animationItem = this.items[elemId];
+    console.log(
+      '_onAddBtnClick elemId:',
+      elemId,
+      ',trackItem:',
+      this.trackItem,
+      ', tran:',
+      animationItem
+    );
+    animationItem.elemId = elemId;
+    const { trackItem } = this;
+    animationItem.trackItem = trackItem;
+    const dur = trackItem.getDuration();
+    console.log('animation dur:', dur);
     this.activeElement(elemId);
-    const transition = this.copyDict(transitionItem);
-    this.ui.addTransition(this.trackItem, transitionItem.dur, transition, () => {
-      const section = this.parent.getSectionByItem(transitionItem.trackItem);
-      this.datasource.fire('track:transition:add', {
-        transition,
+    const section = this.parent.getSectionByItem(trackItem);
+
+    this.ui.timeLine.addAnimation(
+      {
+        duration: dur,
         section,
-      });
-    });
+        elemId,
+        trackItem,
+        text: animationItem.label,
+      },
+      () => {
+        // const menuElem = layerItem.querySelector(menuCss);
+        // menuElem.classList.add('active');
+        // console.log('sync add transition transitionItem:', transitionItem);
+        // console.log('add transition layerItem:', layerItem);
+        // const section = this.parent.getSectionByItem(animationItem.trackItem);
+        this.datasource.fire('track:animation:add', {
+          animation: this.copyDict(animationItem),
+          section,
+        });
+      }
+    );
   }
 
   activeElement(elemId) {
@@ -213,14 +255,13 @@ class Transitions extends TextureUI {
     // menuElem.classList.add('active');
   }
 
-  remove(transitionSection) {
-    console.log('remove transitionSection:', transitionSection);
-    const layerItem = this._els.mainLayer.querySelector(`#${transitionSection.elemId}`);
+  remove(animationSection) {
+    const layerItem = this._els.mainLayer.querySelector(`#${animationSection.elemId}`);
     const menuCss = `.${this.cssPrefix}-menu.check`;
     const menuElem = layerItem.querySelector(menuCss);
     menuElem.classList.remove('active');
-    const section = this.parent.getSectionByItem(transitionSection.trackItem);
-    this.datasource.fire('track:transition:remove', { transition: transitionSection, section });
+    const { section } = animationSection;
+    this.datasource.fire('track:animation:remove', { animation: animationSection, section });
   }
 
   _appendItem(src, fileWidth, fileHeight, fileName) {
@@ -241,7 +282,7 @@ class Transitions extends TextureUI {
     btnStyle = `width:${labelWidth}px;position:absolute;left:0;top:0;`;
     btnStyle += `padding-right:2px;`;
     const layerItem = document.createElement('div');
-    layerItem.id = `transitionItem_${this.counter}`;
+    layerItem.id = `animationItem_${this.counter}`;
     this.counter += 1;
     layerItem.setAttribute('id', layerItem.id);
     layerItem.className = `${this.cssPrefix}-media-item`;
@@ -268,37 +309,29 @@ class Transitions extends TextureUI {
   }
 
   addDatasourceEvents() {
-    const onTransitionsLoaded = this._onTransitionsLoaded.bind(this);
+    const onAnimationsLoaded = this._onAnimationsLoaded.bind(this);
     this.datasource.on({
-      'transitions:loaded': onTransitionsLoaded,
+      'animations:loaded': onAnimationsLoaded,
     });
   }
 
-  activeMenu() {
-    // const menuNames = [];
-    // if (item.name === 'item') {
-    //   menuNames.push('delete');
-    //   if (!isLast) {
-    //     menuNames.push('transition');
-    //   }
-    //   this.disableSubmenus(menuNames);
-    // } else if (item.name === 'transition') {
-    //   menuNames.push('delete');
-    //   this.disableSubmenus(menuNames);
-    // }
-  }
+  activeMenu() {}
 
   addEvents() {
     const onItemDeactive = this._onItemDeactive.bind(this);
     const onItemActive = this._onItemActive.bind(this);
+    const onAnimationItemSelected = this._onAnimationItemSelected.bind(this);
+    const onAnimationItemUnselected = this._onAnimationItemUnselected.bind(this);
     this.getUI().timeLine.on({
       'slip:item:deselected': onItemDeactive,
       'slip:item:selected': onItemActive,
+      'slip:animation:selected': onAnimationItemSelected,
+      'slip:animation:unselected': onAnimationItemUnselected,
     });
   }
 
   getTextureHtml() {
-    return transitionsHtml({
+    return animationsHtml({
       locale: this.locale,
       headerStyle: this.theme.getStyle('header'),
       makeSvgIcon: this.makeSvgIcon,
@@ -307,4 +340,4 @@ class Transitions extends TextureUI {
   }
 }
 
-export default Transitions;
+export default AnimationControl;

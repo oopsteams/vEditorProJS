@@ -20,6 +20,8 @@ import {
 
 const {
   MOUSE_DOWN,
+  MOUSE_MOVE,
+  MOUSE_UP,
   OBJECT_MOVED,
   OBJECT_SCALED,
   OBJECT_ACTIVATED,
@@ -72,6 +74,8 @@ class VideoEditor {
     this._handlers = {
       keydown: this._onKeyDown.bind(this),
       mousedown: this._onMouseDown.bind(this),
+      mousemove: this._onMouseMove.bind(this),
+      mouseup: this._onMouseUp.bind(this),
       objectActivated: this._onObjectActivated.bind(this),
       objectMoved: this._onObjectMoved.bind(this),
       objectScaled: this._onObjectScaled.bind(this),
@@ -102,8 +106,18 @@ class VideoEditor {
       this.ui.initCanvas();
       // this.setReAction();
       // this._attachColorPickerInputBoxEvents();
+      this.ui.editor = this;
     }
     fabric.enableGLFiltering = false;
+    this.permitMouseListener = false;
+  }
+
+  openMouseListener() {
+    this.permitMouseListener = true;
+  }
+
+  closeMouseListener() {
+    this.permitMouseListener = false;
   }
 
   getDatasource() {
@@ -369,6 +383,12 @@ class VideoEditor {
     return this._graphics.getImageName();
   }
 
+  getDimension() {
+    const width = this.getCanvas().getWidth();
+    const height = this.getCanvas().getHeight();
+    return { width, height };
+  }
+
   resizeCanvasDimension(dimension) {
     if (!dimension) {
       return Promise.reject(rejectMessages.invalidParameters);
@@ -410,6 +430,8 @@ class VideoEditor {
   _attachGraphicsEvents() {
     this._graphics.on({
       [MOUSE_DOWN]: this._handlers.mousedown,
+      [MOUSE_UP]: this._handlers.mouseup,
+      [MOUSE_MOVE]: this._handlers.mousemove,
       [OBJECT_MOVED]: this._handlers.objectMoved,
       [OBJECT_SCALED]: this._handlers.objectScaled,
       [OBJECT_ROTATED]: this._handlers.objectRotated,
@@ -553,7 +575,21 @@ class VideoEditor {
   }
 
   _onMouseDown(event, originPointer) {
-    this.fire(events.MOUSE_DOWN, event, originPointer);
+    if (this.permitMouseListener) {
+      this.fire(events.MOUSE_DOWN, event, originPointer);
+    }
+  }
+
+  _onMouseUp(event, originPointer) {
+    if (this.permitMouseListener) {
+      this.fire(events.MOUSE_UP, event, originPointer);
+    }
+  }
+
+  _onMouseMove(event, originPointer) {
+    if (this.permitMouseListener) {
+      this.fire(events.MOUSE_MOVE, event, originPointer);
+    }
   }
 
   _onObjectActivated(props) {

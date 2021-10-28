@@ -8,6 +8,7 @@ export default ({ locale, headerStyle, makeSvgIcon, cssPrefix }) => `
   <div class="${cssPrefix}-media-layer-main">
     <div class="${cssPrefix}-media-item">
       <div class="${cssPrefix}-media-load-frame">
+        <div style="display:none;"><audio class="${cssPrefix}-audio"></audio></div>
         <div>
             ${makeSvgIcon(['normal', 'active'], 'load', true)}
             <div>${locale.localize('Drag and drop your audio here')}</div>

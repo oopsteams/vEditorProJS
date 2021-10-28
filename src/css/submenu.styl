@@ -45,9 +45,32 @@
         .{prefix}-submenu
             display: table;
 */
+.{prefix}-media-layer-main
+    .{prefix}-submenu-item
+    li
+        display: inline-block;
+        vertical-align: top;
+        align-content: center;
+    .{prefix}-newline
+        display: block;
+        margin-top: 0;
+    .{prefix}-button
+        position: relative;
+        cursor: pointer;
+        display: inline-block;
+        font-weight: normal;
+        font-size: 11px;
+        text-align: center;
+    label > span
+        display: inline-block;
+        cursor: pointer;
+        padding-top: 5px;
+        font-family: "Noto Sans", sans-serif;
+        font-size: 11px;
+
 .{prefix}-layer-main-left
     .{prefix}-media-controls
-      height: 100%;
+      /*height: 100%;*/
       .{prefix}-track-menu
           white-space: inherit;
           cursor: pointer;
@@ -138,6 +161,16 @@
             display: block;
 
 .{prefix}-layer-main-left
+    .{prefix}-media-controls.text
+        .{prefix}-track-menu.text
+            display: block;
+
+.{prefix}-layer-main-left
+    .{prefix}-media-controls.animation
+        .{prefix}-track-menu.animation
+            display: block;
+
+.{prefix}-layer-main-left
     .{prefix}-media-controls
         .{prefix}-partition
             height: 2px;
@@ -148,3 +181,14 @@
                 height: 1px;
                 border: 0px;
                 border-top: 1px solid #e5e5e5;
+
+.{prefix}-vpartition
+    width: 2px;
+    display: inline-block;
+    > div
+        display: block;
+        background-color: #444;
+        width: 1px;
+        height: 24px;
+        border: 0px;
+        border-left: 0px solid #e5e5e5;

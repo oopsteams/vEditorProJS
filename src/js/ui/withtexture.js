@@ -214,10 +214,10 @@ class TextureUI extends Submenu {
 
   addTrackItemEvents() {
     const onSubMenuClick = this._onSubMenuClick.bind(this);
-    const onItemActive = this._onItemActive.bind(this);
-    this.getUI().timeLine.on({
-      'track:item:active': onItemActive,
-    });
+    // const onItemActive = this._onItemActive.bind(this);
+    // this.getUI().timeLine.on({
+    //   'track:item:active': onItemActive,
+    // });
     if (this.trackItemElements && this.trackItemElements.length > 0) {
       this.trackItemElements.forEach((elem) => {
         elem.addEventListener('click', onSubMenuClick);

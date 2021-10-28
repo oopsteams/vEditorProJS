@@ -185,3 +185,30 @@ export const rejectMessages = {
   unsupportedOperation: 'Unsupported operation.',
   unsupportedType: 'Unsupported object type.',
 };
+
+export const selectorNames = {
+  COLOR_PICKER_INPUT_BOX: '.tui-colorpicker-palette-hex',
+};
+
+export const defaultTextRangeValues = {
+  realTimeEvent: true,
+  min: 10,
+  max: 100,
+  value: 50,
+};
+
+export const familyMap = {
+  'Microsoft_YaHei_Regular.typeface.json': '雅黑',
+  'FZShouJinShu-S10S_regular.typeface.json': '瘦金',
+  'ZCOOL_XiaoWei_Regular.json': '小魏',
+  'ZCOOL_KuaiLe_Regular.json': '欢乐',
+  'ZCOOL_QingKe_HuangYou_Regular.json': '幼圆黑',
+  'Ma_Shan_Zheng_Regular.json': '软笔',
+  'Zhi_Mang_Xing_Regular.json': '行书',
+  'Liu_Jian_Mao_Cao_Regular.json': '毛草',
+};
+
+export const textDirection = {
+  horizontal: '水平',
+  vertical: '垂直',
+};

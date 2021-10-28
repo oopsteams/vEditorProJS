@@ -3,6 +3,8 @@ import fabric from 'fabric';
 import Panel from '@/timeline/component/panel';
 import Track from '@/timeline/component/track';
 import WaveTrack from '../component/wavetrack';
+import TextTrack from '../component/textTrack';
+import AnimationTrack from '../component/animationTrack';
 import { getProperties, includes } from '@/util';
 const { stamp, CustomEvents, extend, isArray } = snippet;
 
@@ -16,7 +18,9 @@ const backstoreOnly = {
 };
 // const pad = 5;
 // const MIN_SPACE = 45;
+const HEIGHT_SCALE = 1.2;
 const PANEL_HEIGHT = 50;
+const TRACK_PAD = 3;
 class TimeLine {
   constructor(
     wrapElement,
@@ -44,12 +48,40 @@ class TimeLine {
     };
     this._createComponents();
     this._attachCanvasEvents();
+    this.rows = [];
     this.setTick().then((fPanel) => {
       this.inited = true;
       this.track = new Track(this, { top: fPanel.height, previewItemWidth, previewItemHeight });
-      this.wavetrack = new WaveTrack(this, { top: fPanel.height + this.track.getBoxHeight() });
+      this.wavetrack = new WaveTrack(this, {
+        top: fPanel.height + this.track.getBoxHeight() + TRACK_PAD,
+      });
+      this.rows.push(this.wavetrack);
+      this.texttrack = new TextTrack(this, {
+        top: fPanel.height + this.track.getBoxHeight() + this.wavetrack.getBoxHeight() + TRACK_PAD,
+      });
+      this.rows.push(this.texttrack);
+      this.animationtrack = new AnimationTrack(this, {
+        top:
+          fPanel.height +
+          this.track.getBoxHeight() +
+          this.wavetrack.getBoxHeight() +
+          this.texttrack.getBoxHeight() +
+          TRACK_PAD,
+      });
+      this.rows.push(this.animationtrack);
     });
     window.timeline = this;
+  }
+
+  clearTracks() {
+    if (this.inited) {
+      this.animationtrack.clearAll();
+      this.texttrack.clearAll();
+      this.wavetrack.clearAll();
+      this.track.clearAll();
+      this.rows = [];
+      this.fire('timeline:clear:all', {});
+    }
   }
 
   getTimeLineMaxRect() {
@@ -72,7 +104,7 @@ class TimeLine {
       enableRetinaScaling: true,
       selection: false,
     });
-    dimension.height = Math.floor(wrapHeight * 1.2);
+    dimension.height = Math.floor(wrapHeight * HEIGHT_SCALE);
     this.resetDimension(dimension);
     this.contextContainer = this.canvasElement.getContext('2d');
     this.wrapElement.style.height = `${wrapHeight}px`;
@@ -89,11 +121,13 @@ class TimeLine {
 
   resizeEditor({ width, height }) {
     const dimension = {};
-    dimension.height = height * 2;
+    dimension.height = height * HEIGHT_SCALE;
     dimension.width = width;
     this.resetDimension(dimension);
     console.log('timeline resizeEditor:', width, height);
     this.wrapElement.style.height = `${height}px`;
+    this.resizeTick();
+    this.getPanel().resize();
   }
 
   lock() {
@@ -106,6 +140,17 @@ class TimeLine {
     this.getPanel().enable();
     if (this.track) {
       this.track.unlock();
+    }
+  }
+
+  resizeTick() {
+    if (this.indicator) {
+      const canvasHeight = this._canvas.getHeight();
+      const center = this.getCenter();
+      const height = Math.floor(canvasHeight - PANEL_HEIGHT);
+      const { left } = center;
+      this.indicator.set({ left, height });
+      this.indicatorLabel.set({ left });
     }
   }
 
@@ -185,6 +230,23 @@ class TimeLine {
       });
   }
 
+  addText(dur, context, cb) {
+    const start = this.getCurrentTime();
+    this.texttrack.addText(start, dur, this.previewItemWidth, context).then((textItem) => {
+      if (cb) {
+        cb(textItem);
+      }
+    });
+  }
+
+  addAnimation(context, cb) {
+    this.animationtrack.addAnimation(this.previewItemWidth, context).then((item) => {
+      if (cb) {
+        cb(item);
+      }
+    });
+  }
+
   addWave(dur, files, context, cb) {
     this.wavetrack.addWave(0, dur, files, this.previewItemWidth, context).then(() => {
       const waveDuration = this.wavetrack.totalDuration();
@@ -207,6 +269,10 @@ class TimeLine {
 
   convertTimeToPos(time) {
     return this.getComponent(tlComponentNames.PANEL).getLeftPosByProgress(time);
+  }
+
+  convertPosToTime(x) {
+    return this.getComponent(tlComponentNames.PANEL).convertPosToTime(x);
   }
 
   getPosOffset(progress) {
@@ -299,7 +365,15 @@ class TimeLine {
   }
 
   syncIndicator({ time, progress }) {
+    let lastOffset;
     if (this.inited) {
+      // update track height
+      lastOffset = this.track.getYOffset();
+      for (let i = 0, n = this.rows.length; i < n; i += 1) {
+        const t = this.rows[i];
+        t.updateTop(lastOffset.top + lastOffset.height + TRACK_PAD);
+        lastOffset = t.getYOffset();
+      }
       this.fire(events.SYNC_TIME_CHANGED, { progress, time, duration: this.duration });
     }
   }

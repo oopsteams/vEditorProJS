@@ -110,6 +110,7 @@ export default ({
     }
     .${cssPrefix}-track-menu use.normal.use-default,
     .${cssPrefix}-menu use.normal.use-default,
+    .${cssPrefix}-main-menu use.normal.use-default,
     .${cssPrefix}-help-menu use.normal.use-default {
         fill-rule: evenodd;
         fill: "transparent";
@@ -117,6 +118,7 @@ export default ({
     }
     .${cssPrefix}-track-menu use.active.use-default,
     .${cssPrefix}-menu use.active.use-default,
+    .${cssPrefix}-main-menu use.active.use-default,
     .${cssPrefix}-help-menu use.active.use-default {
         fill-rule: evenodd;
         fill: ${menuIconStyle.hover.color};
@@ -124,12 +126,14 @@ export default ({
     }
     .${cssPrefix}-track-menu use.hover.use-default,
     .${cssPrefix}-menu use.hover.use-default,
+    .${cssPrefix}-main-menu use.hover.use-default,
     .${cssPrefix}-help-menu use.hover.use-default {
         fill-rule: evenodd;
         fill: ${menuIconStyle.hover.color};
         stroke: ${menuIconStyle.hover.color};
     }
     .${cssPrefix}-menu use.disabled.use-default,
+    .${cssPrefix}-main-menu use.disabled.use-default,
     .${cssPrefix}-help-menu use.disabled.use-default {
         fill-rule: evenodd;
         fill: ${menuIconStyle.disabled.color};

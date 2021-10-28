@@ -204,20 +204,31 @@ class TrackItem {
       const lastImage = this.frameViews[subIndex - 1];
       imageOption.left = lastImage.rw + lastImage.left;
       imageOption.scaleX = file.w / imageOption.width;
-      fabric.Image.fromURL(
-        file.url,
-        (fImage) => {
-          fImage.setOptions(imageOption);
-          fImage.time = i;
-          fImage.rw = file.w;
-          fImage.exclude = file.exclude;
-          this.frameViews.push(fImage);
-          this._loopUpdateImage({ i: i + 1, start, end, files, space }, callback);
-        },
-        {
-          crossOrigin: 'Anonymous',
-        }
-      );
+      if (file.url) {
+        fabric.Image.fromURL(
+          file.url,
+          (fImage) => {
+            fImage.setOptions(imageOption);
+            fImage.time = i;
+            fImage.rw = file.w;
+            fImage.exclude = file.exclude;
+            this.frameViews.push(fImage);
+            this._loopUpdateImage({ i: i + 1, start, end, files, space }, callback);
+          },
+          {
+            crossOrigin: 'Anonymous',
+          }
+        );
+      } else {
+        imageOption.fill = 'rgba(255,255,255,0.3)';
+        imageOption.stroke = '#282828';
+        const polygon = new fabric.Rect(imageOption);
+        polygon.time = i;
+        polygon.rw = file.w;
+        polygon.exclude = file.exclude;
+        this.frameViews.push(polygon);
+        this._loopUpdateImage({ i: i + 1, start, end, files, space }, callback);
+      }
     }
   }
 
@@ -256,31 +267,45 @@ class TrackItem {
     if (imgCount > 0) {
       imageOption.left = this.frameViews[imgCount - 1].rw + this.frameViews[imgCount - 1].left;
     }
-
-    fabric.Image.fromURL(
-      file.url,
-      (fImage) => {
-        fImage.setOptions(imageOption);
-        fImage.time = i;
-        fImage.rw = file.w;
-        fImage.exclude = file.exclude;
-        this.frameViews.push(fImage);
-        this._loopNewImage({ i: i + 1, start, end, files, space }, callback);
-      },
-      {
-        crossOrigin: 'Anonymous',
-      }
-    );
+    if (file.url) {
+      fabric.Image.fromURL(
+        file.url,
+        (fImage) => {
+          fImage.setOptions(imageOption);
+          fImage.time = i;
+          fImage.rw = file.w;
+          fImage.exclude = file.exclude;
+          this.frameViews.push(fImage);
+          this._loopNewImage({ i: i + 1, start, end, files, space }, callback);
+        },
+        {
+          crossOrigin: 'Anonymous',
+        }
+      );
+    } else {
+      imageOption.fill = 'rgba(255,255,255,0.3)';
+      imageOption.stroke = '#282828';
+      const polygon = new fabric.Rect(imageOption);
+      polygon.time = i;
+      polygon.rw = file.w;
+      polygon.exclude = file.exclude;
+      this.frameViews.push(polygon);
+      this._loopNewImage({ i: i + 1, start, end, files, space }, callback);
+    }
   }
 
   timeChanged(time) {
     const x = this.getTimeline().convertTimeToPos(this.start);
     this.itemPanel.left = x + time;
-    const { left, top, width, height } = this.itemPanel;
-    this.fire('track:item:move', { left, top, width, height });
+    this.syncItemOffset();
     this.xyRange[0] = this.itemPanel.left;
     this.xyRange[1] = this.itemPanel.left + this.itemPanel.width;
     this.itemPanel.setCoords();
+  }
+
+  syncItemOffset() {
+    const { left, top, width, height } = this.itemPanel;
+    this.fire('track:item:move', { left, top, width, height });
   }
 
   increaseDuration(delta) {
@@ -340,9 +365,6 @@ class TrackItem {
     // console.log('updateSize left:', left, ',right:', right);
     const { duration } = this.context;
     const t = this.getDuration();
-    if (t < 1) {
-      return;
-    }
 
     const reBuild = () => {
       // console.log('new timeRange:', this.timeRange);
@@ -359,15 +381,21 @@ class TrackItem {
             range: this.timeRange,
             context: this.context,
           });
+          this.syncItemOffset();
         });
       });
     };
+    if (t < 0.2) {
+      this.timeRange[1] = this.timeRange[0] + 0.2;
+      reBuild();
 
+      return;
+    }
     if (left === 1) {
       newT = t * right;
       if (newT + this.timeRange[0] > duration) {
         delta = newT + this.timeRange[0] - duration;
-        if (this.isImage && delta > 0.01) {
+        if (this.isImage && delta >= 0.05) {
           delta = Math.floor(delta * 100) / 100;
           newT = delta + duration - this.timeRange[0];
           this.timeRange[1] = this.timeRange[0] + newT;
@@ -378,7 +406,7 @@ class TrackItem {
 
           return;
         }
-        newT = duration - this.timeRange[0];
+        newT = this.timeRange[1] - this.timeRange[0];
       }
       // 如果是图片可以超出原有duration，此时需要更新panel ticks
       this.timeRange[1] = this.timeRange[0] + newT;
@@ -411,7 +439,9 @@ class TrackItem {
   dispose() {
     if (this.frameViews.length > 0) {
       this.frameViews.forEach((img) => {
-        img.dispose();
+        if (img.dispose) {
+          img.dispose();
+        }
       });
     }
     if (this.transition) {
@@ -457,7 +487,6 @@ class TrackItem {
 
   _bindEventOnObj(fObj, cb) {
     const self = this;
-    const canvas = this.getCanvas();
 
     fObj.on({
       added() {
@@ -465,53 +494,13 @@ class TrackItem {
           cb(this);
         }
       },
-      selected() {
-        self._isSelected = true;
-        self._shapeObj = this;
-      },
-      deselected() {
-        self._isSelected = false;
-        self._shapeObj = null;
-      },
-      modifiedInGroup(activeSelection) {
-        console.log('modifiedInGroup in activeSelection:', activeSelection);
-      },
-      mousedown(fEvent) {
-        self._startPoint = canvas.getPointer(fEvent.e);
-        // console.log('track item mousedown _startPoint:', self._startPoint);
+      selected() {},
+      deselected() {},
+      modifiedInGroup() {},
+      mousedown() {
         self.track.active(self);
-        // this.track.timeline.fire('track:item:active', {
-        //   range: this.timeRange,
-        //   context: this.context,
-        // });
       },
-      moving(fEvent) {
-        const _startPoint = canvas.getPointer(fEvent.e);
-        // const { x, y } = _startPoint, { sx = x, sy = y } = self._startPoint;
-        self._startPoint = _startPoint;
-        console.log('trackitem moving _startPoint:', _startPoint);
-        /*
-        const diff = self.range[0] - this.left;
-        if (diff < 0) {
-          this.left = self.range[0];
-          if (!self.checkInCache(0)) {
-            // self.timeline.fire('time:head', { progress: 0 });
-            self.timeline.indicatorMoved({ progress: 0 });
-          }
-        } else if (diff > self.range[1]) {
-          this.left = self.range[0] - self.range[1];
-          if (!self.checkInCache(1)) {
-            // self.timeline.fire('time:end', { progress: 1 });
-            self.timeline.indicatorMoved({ progress: 1 });
-          }
-        } else {
-          const progress = diff / self.range[1];
-          if (!self.checkInCache(progress)) {
-            self.timeline.indicatorMoved({ progress });
-          }
-        }
-        */
-      },
+      moving() {},
     });
   }
 

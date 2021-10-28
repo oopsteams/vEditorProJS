@@ -1,13 +1,14 @@
 // import snippet from 'tui-code-snippet';
 // import fabric from 'fabric';
 import Component from '@/timeline/component';
-import TextTrackItem from '../model/textTrackItem';
-import TrackTransition from '../model/tracktransition';
+import TextItem from '../model/textTrackItem';
 import TextSlipWindow from './textSlipWindow';
+// import SlipWinndow from './slipWIndow';
 import { tlComponentNames, eventNames } from '@/consts';
+const boxHeight = 30;
 
 class TextTrack extends Component {
-  constructor(timeline, { type, top, previewItemWidth, previewItemHeight }) {
+  constructor(timeline, { type, top }) {
     super(tlComponentNames.TRACK, timeline);
     this.range = [];
     this.groups = [];
@@ -19,8 +20,6 @@ class TextTrack extends Component {
     }
     this.type = type;
     this.top = top;
-    this.previewItemWidth = previewItemWidth;
-    this.previewItemHeight = previewItemHeight;
     this.slipWinndow = new TextSlipWindow(this);
     this._handlers = {
       mousedown: this._onFabricMouseDown.bind(this),
@@ -29,17 +28,45 @@ class TextTrack extends Component {
       poschanged: this._onPosChanged.bind(this),
       tickschanged: this._onTicksChanged.bind(this),
       timechanged: this._onTimeChanged.bind(this),
-      syncTimeChanged: this._onSyncTimeChanged.bind(this),
+      focusItem: this._onFocusItem.bind(this),
+      syncTimeChanged: this._onTimeChanged.bind(this),
     };
     this.changeCache = {};
     this.start();
     this.counter = 0;
     this.setupSlip();
-    this.locked = false;
   }
 
   getBoxHeight() {
-    return this.previewItemHeight;
+    return boxHeight;
+  }
+
+  getYOffset() {
+    let top = 0,
+      height = 0;
+    if (this.groups.length > 0) {
+      this.groups.forEach((ti) => {
+        const { top: _top, height: _height } = ti.getRect();
+        if (top < _top) {
+          top = _top;
+        }
+        if (height < _height) {
+          height = _height;
+        }
+      });
+    } else {
+      top = this.top;
+      height = this.getBoxHeight();
+    }
+
+    return { top, height };
+  }
+
+  updateTop(top) {
+    this.top = top;
+    this.groups.forEach((i) => {
+      i.updateTop(top);
+    });
   }
 
   totalDuration() {
@@ -59,122 +86,21 @@ class TextTrack extends Component {
     return item === this.groups[this.groups.length - 1];
   }
 
-  getTransitionItems(trackItem) {
-    let preItem, nextItem;
-    console.log('getTransitionItems trackItem:', trackItem);
-    for (let i = 0, n = this.groups.length; i < n; i += 1) {
-      const g = this.groups[i];
-      if (g.name === 'item') {
-        if (g === trackItem) {
-          preItem = g;
-          continue;
-        }
-        if (preItem) {
-          nextItem = g;
-          break;
-        }
-      }
-    }
+  addText(start, duration, space, context) {
+    // const total = this.totalDuration();
+    // start = start + total;
+    const { section } = context;
+    section.startAt = start;
+    const ti = new TextItem(
+      { start, duration, space, top: this.top, height: boxHeight, context },
+      this
+    );
 
-    return { item: preItem, next: nextItem };
-    // if (preItem && nextItem) {
-    //   this.insertBefore(trackTransition, nextItem);
-    // }
-    // return Promise.resolve();
-  }
+    return ti.setup().then(() => {
+      this.groups.push(ti);
+      this.timeline.fire('track:text:new', {});
 
-  addTransition(trackItem, start, duration, space, context) {
-    const total = this.totalDuration();
-    start = start + total;
-    const { item, next } = this.getTransitionItems(trackItem);
-
-    if (item.transition) {
-      console.log('transition exist!!!!!!!');
-      item.transition.context = context;
-      if (!item.hasTransition) {
-        item.hasTransition = true;
-
-        return item.transition.reAdd().then(() => {
-          this.groups.push(item.transition);
-          if (item && next) {
-            this.insertBefore(item.transition, next);
-          }
-          this.timeline.fire('track:add', { track: this });
-
-          return Promise.resolve();
-        });
-      }
-
-      return Promise.resolve();
-    }
-
-    return this.timeline.changeDuration(total + duration).then(() => {
-      console.log('new Transition start at:', start);
-      const tt = new TrackTransition(
-        { start, duration, space, top: this.top, height: this.previewItemHeight, context },
-        this
-      );
-
-      return tt.setup().then(() => {
-        item.transition = tt;
-        item.hasTransition = true;
-        this.groups.push(tt);
-        console.log('groups len:', this.groups.length);
-
-        if (item && next) {
-          this.insertBefore(tt, next);
-        }
-        this.timeline.fire('track:add', { track: this });
-
-        return Promise.resolve();
-      });
-    });
-  }
-
-  /*
-  removeTransition() {
-    if (this.currentItem && !this.isLastItem(this.currentItem)) {
-      this.currentItem.removeTransition();
-      this.active(this.currentItem);
-      this.timeline.deactivateAll();
-      this.timeline.fire('track:remove', { track: this });
-
-      return true;
-    }
-
-    return false;
-  }
-  */
-
-  removeFrame() {
-    this.timeline.fire('track:remove', { track: this });
-  }
-
-  addTextFrames(start, duration, files, space, context) {
-    const total = this.totalDuration();
-    // console.log('addVideoFrames total:', total);
-    start = start + total;
-    if (context.height && this.groups.length === 0) {
-      this.previewItemHeight = context.height;
-    }
-
-    return this.timeline.changeDuration(total + duration).then(() => {
-      const progress = this.timeline.getCurrentProgress();
-      // console.log('track addVideoFrames progress:', progress);
-      const ti = new TextTrackItem(
-        { start, duration, files, space, top: this.top, height: this.previewItemHeight, context },
-        this
-      );
-      return ti.setup(progress).then(() => {
-        // this.groups.forEach((ti) => {
-        //   ti.hasTransition = true;
-        // });
-        // ti.hasTransition = false;
-        this.groups.push(ti);
-        this.timeline.fire('track:add', { track: this });
-
-        return Promise.resolve();
-      });
+      return Promise.resolve(ti);
     });
   }
 
@@ -182,84 +108,49 @@ class TextTrack extends Component {
     this.currentItem = item;
   }
 
-  setupSlip() {
-    this.slipWinndow.setup();
-    const onDeselected = this._onSlipDeselected.bind(this);
-    const onSlipSelected = this._onSlipSelected.bind(this);
-    this.slipWinndow.on({ 'slip:deselected': onDeselected });
-    this.slipWinndow.on({ 'slip:selected': onSlipSelected });
-  }
-
-  active(item) {
-    if (this.locked) {
-      return;
-    }
-    this.setCurrentItem(item);
-    const isLast = item === this.groups[this.groups.length - 1];
-    this.timeline.fire('track:item:active', { item, isLast });
-    if (!this.isTransition(item)) {
-      this.slipWinndow.show(item);
-    }
-  }
-
-  isEmpty() {
-    return this.groups.length === 0;
-  }
-
-  lock() {
-    this.timeline.fire('track:item:active', { item: null });
-    this.slipWinndow.hide();
-    this.locked = true;
-  }
-
-  unlock() {
-    this.locked = false;
-    if (this.currentItem) {
-      this.active(this.currentItem);
-    }
-  }
-
   hasItem() {
-    if (this.groups.length > 0) {
-      for (let i = 0, n = this.groups.length; i < n; i += 1) {
-        const g = this.groups[i];
-        if (g.name === 'item') {
-          return g;
-        }
-      }
-    }
-
-    return false;
+    return this.groups.length > 0;
   }
 
   remove(item) {
     const idx = this.groups.indexOf(item);
     if (idx >= 0) {
-      if (this.isTransition(item)) {
-        const ctx = this.getTransitionItems(item.context.trackItem);
-        const preItem = ctx.item;
-        console.log('preItem:', preItem, ',elemId:', item.context.elemId);
-        preItem.hasTransition = false;
-      }
       this.groups.splice(idx, 1);
       const _item = this.hasItem();
-      if (_item) {
-        this.updateStart(this.groups, 0);
-        this.active(_item);
-        // this.timeline.fire('track:item:changed', { item: null });
-      } else {
+      if (!_item) {
         this.setCurrentItem(null);
-        this.timeline.fire('track:item:active', { item: null });
         this.slipWinndow.hide();
       }
     }
   }
 
+  clearAll() {
+    const gs = [];
+    this.groups.forEach((g) => {
+      gs.push(g);
+    });
+    gs.forEach((g) => {
+      g.dispose();
+    });
+  }
+
+  setupSlip() {
+    this.slipWinndow.setup();
+  }
+
+  active(item) {
+    this.setCurrentItem(item);
+    const isLast = item === this.groups[this.groups.length - 1];
+    this.timeline.fire('slip:text:selected', { item, isLast });
+    this.slipWinndow.show(item);
+  }
+
   start() {
     this.timeline.on({
-      [eventNames.PANEL_POS_CHANGED]: this._handlers.timechanged,
-      [eventNames.PANEL_TICKS_CHANGED]: this._handlers.tickschanged,
+      // [eventNames.PANEL_POS_CHANGED]: this._handlers.timechanged,
+      // [eventNames.PANEL_TICKS_CHANGED]: this._handlers.tickschanged,
       [eventNames.TIME_CHANGED]: this._handlers.timechanged,
+      'track:text:focus': this._handlers.focusItem,
       [eventNames.SYNC_TIME_CHANGED]: this._handlers.syncTimeChanged,
     });
   }
@@ -267,19 +158,8 @@ class TextTrack extends Component {
   end() {
     this._isSelected = false;
     this.timeline.off({
-      [eventNames.PANEL_POS_CHANGED]: this._handlers.timechanged,
-      [eventNames.PANEL_TICKS_CHANGED]: this._handlers.tickschanged,
       [eventNames.TIME_CHANGED]: this._handlers.timechanged,
-      [eventNames.SYNC_TIME_CHANGED]: this._handlers.syncTimeChanged,
     });
-  }
-
-  _onSlipDeselected() {
-    console.log('_onSlipDeselected in....');
-  }
-
-  _onSlipSelected() {
-    console.log('_onSlipSelected in....');
   }
 
   _onPosChanged({ progress }) {
@@ -320,63 +200,39 @@ class TextTrack extends Component {
     });
   }
 
-  _onSyncTimeChanged({ progress }) {
-    const x = this.timeline.getPosOffset(progress);
-    this.groups.forEach((g) => {
-      g.timeChanged(x);
-    });
-  }
-
-  checkInCache(newProgress) {
-    const { version, progress } = this.changeCache;
-    if (version !== this.version) {
-      this.changeCache.version = this.version;
-      this.changeCache.progress = newProgress;
-
-      return false;
+  _onFocusItem({ elemId }) {
+    const currentTime = this.timeline.getCurrentTime();
+    for (let i = 0, n = this.groups.length; i < n; i += 1) {
+      const item = this.groups[i];
+      if (item.context.elemId === elemId) {
+        const _end = item.start + item.getDuration();
+        if (currentTime < item.start || currentTime > _end) {
+          this.timeline.changeTime(item.start);
+          this.timeline.track.active(item);
+        }
+        break;
+      }
     }
-    if (newProgress !== progress) {
-      this.changeCache.version = this.version;
-      this.changeCache.progress = newProgress;
-
-      return false;
-    }
-
-    return true;
   }
 
   updateStart(items, newStart) {
     let lastStart = newStart;
-    // console.log('updateStart lastStart:', lastStart);
+    console.log('updateStart lastStart:', lastStart);
     if (items.length > 0) {
       for (let i = 0; i < items.length; i += 1) {
         const ti = items[i];
         ti.updateStart(lastStart);
         lastStart = ti.start + ti.getDuration();
       }
-      // this.groups.forEach((ti) => {
-      //   ti.hasTransition = true;
-      // });
-      this.groups.sort(function (a, b) {
-        return a.start - b.start;
-      });
-      const lastItem = this.groups[this.groups.length - 1];
-      if (this.isTransition(lastItem)) {
-        const _lastItem = lastItem.context.trackItem;
-        if (_lastItem) {
-          _lastItem.hideTransition();
-        }
-      }
     }
-    // this.getCanvas().renderAll();
   }
 
-  insertBefore(target, second) {
+  insertBefore(first, second) {
     let find;
-    const items = [target];
-    // this.groups.sort(function (a, b) {
-    //   return a.start - b.start;
-    // });
+    const items = [first];
+    this.groups.sort(function (a, b) {
+      return a.start - b.start;
+    });
     for (let i = 0; i < this.groups.length; i += 1) {
       const ti = this.groups[i];
       if (ti === second) {
@@ -385,7 +241,7 @@ class TextTrack extends Component {
         continue;
       }
       if (find) {
-        if (ti === target) {
+        if (ti === first) {
           break;
         }
         items.push(ti);
@@ -394,15 +250,15 @@ class TextTrack extends Component {
     this.updateStart(items, second.start);
   }
 
-  insertAfter(target, second) {
+  insertAfter(first, second) {
     let find;
     const items = [];
-    // this.groups.sort(function (a, b) {
-    //   return a.start - b.start;
-    // });
+    this.groups.sort(function (a, b) {
+      return a.start - b.start;
+    });
     for (let i = 0; i < this.groups.length; i += 1) {
       const ti = this.groups[i];
-      if (ti === target) {
+      if (ti === first) {
         find = true;
         continue;
       }
@@ -413,14 +269,16 @@ class TextTrack extends Component {
         }
       }
     }
-    items.push(target);
-    this.updateStart(items, target.start);
+    items.push(first);
+    this.updateStart(items, first.start);
   }
 
   scaleAfter(first) {
     let find;
     const items = [];
-
+    this.groups.sort(function (a, b) {
+      return a.start - b.start;
+    });
     for (let i = 0; i < this.groups.length; i += 1) {
       const ti = this.groups[i];
       if (ti === first) {
@@ -434,66 +292,109 @@ class TextTrack extends Component {
     this.updateStart(items, first.start + first.getDuration());
   }
 
-  isTransition(item) {
-    return item.name === 'transition';
+  swapItem(first, second) {
+    const firstStart = first.start;
+    const secondStart = second.start;
+    first.updateStart(secondStart);
+    second.updateStart(firstStart);
   }
 
-  updatingPosition(item, { x, direct }) {
+  syncMove(diff, items) {
+    if (items.length > 0) {
+      for (let i = 0; i < items.length; i += 1) {
+        const ti = items[i];
+        ti.updateStart(ti.start + diff);
+      }
+    }
+  }
+
+  focusTrackItem(trackItem) {
+    const currentTime = this.timeline.getCurrentTime();
+    // const start = trackItem.start;
+    const _end = trackItem.start + trackItem.getDuration();
+    if (currentTime < trackItem.start || currentTime > _end) {
+      this.timeline.changeTime(trackItem.start);
+      this.timeline.track.active(trackItem);
+    }
+  }
+
+  updatingPosition(item, { left, x, direct }) {
     let done = false;
+    // findSelf = false;
 
     return new Promise((resolve) => {
+      // const _items = [];
       for (let i = 0; i < this.groups.length; i += 1) {
         const ti = this.groups[i];
-        if (ti === item || this.isTransition(ti)) {
+        if (ti === item) {
+          // findSelf = true;
           continue;
         }
         const [x0, x1] = ti.xyRange;
         // console.log('x:', x, ',x0:', x0, ',x1:', x1, ',direct:', direct);
+        // if (findSelf) {
+        //   _items.push(ti);
+        // }
         if (x > x0 && x < x1) {
           if (direct > 0) {
-            this.insertAfter(item, ti);
+            // this.insertAfter(item, ti);
+            this.swapItem(item, ti);
             done = true;
           } else if (direct < 0) {
-            this.insertBefore(item, ti);
+            // this.insertBefore(item, ti);
+            this.swapItem(item, ti);
             done = true;
           }
           break;
         }
       }
+      if (!done) {
+        const newStart = this.timeline.convertPosToTime(left);
+        item.updateStart(newStart);
+        // this.syncMove(diff, _items);
+      }
       resolve(done);
+    });
+  }
+
+  _bindEventOnObj(fObj, cb) {
+    const self = this;
+    const canvas = this.getCanvas();
+
+    fObj.on({
+      added() {
+        self._shapeObj = this;
+        if (cb) {
+          self.timeline.showIndicator();
+          cb(this);
+        }
+      },
+      selected() {
+        self._isSelected = true;
+        self._shapeObj = this;
+      },
+      deselected() {
+        self._isSelected = false;
+        self._shapeObj = null;
+      },
+      modifiedInGroup(activeSelection) {
+        console.log('modifiedInGroup in activeSelection:', activeSelection);
+      },
+      mousedown(fEvent) {
+        self._startPoint = canvas.getPointer(fEvent.e);
+        console.log('panel mousedown _startPoint:', self._startPoint);
+      },
+      moving(fEvent) {
+        console.log('panel moving fEvent:', fEvent);
+      },
     });
   }
 
   _onFabricMouseDown() {}
 
-  _onFabricMouseMove(fEvent) {
-    const canvas = this.getCanvas();
-    const pointer = canvas.getPointer(fEvent.e);
-    const startPointX = this._startPoint.x;
-    const startPointY = this._startPoint.y;
-    const width = startPointX - pointer.x;
-    const height = startPointY - pointer.y;
-    const shape = this._shapeObj;
+  _onFabricMouseMove() {}
 
-    if (!shape) {
-      // this._shapeObj.set({
-      //   isRegular: this._withShiftKey,
-      // });
-      console.log('width:', width, ',height:', height);
-    }
-  }
-
-  _onFabricMouseUp() {
-    const canvas = this.getCanvas();
-    // const startPointX = this._startPoint.x;
-    // const startPointY = this._startPoint.y;
-    // const shape = this._shapeObj;
-
-    canvas.off({
-      'mouse:move': this._handlers.mousemove,
-      'mouse:up': this._handlers.mouseup,
-    });
-  }
+  _onFabricMouseUp() {}
 }
 
 export default TextTrack;

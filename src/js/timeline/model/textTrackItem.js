@@ -1,16 +1,15 @@
 import snippet from 'tui-code-snippet';
 import fabric from 'fabric';
-// import Transition from '../component/Transition';
-const { CustomEvents, extend } = snippet;
+const { CustomEvents } = snippet;
 
-class TextTrackItem {
-  constructor({ start, duration, files, space, top, height, context }, track) {
+class TextItem {
+  constructor({ start, duration, space, top, height, context }, textTrack) {
     this.name = 'textitem';
     this.start = start;
     this.duration = duration;
     this.context = context;
-    this.track = track;
-    this.files = files;
+    this.sections = [];
+    this.textTrack = textTrack;
     this.space = space;
     this.boxHeight = height;
     this.top = top;
@@ -22,8 +21,6 @@ class TextTrackItem {
     this.labels = [];
     this.transition = null;
     this.hasTransition = false;
-    this.version = 0;
-    this.isImage = context.fileType.indexOf('image') >= 0;
     this._handlers = {
       mousedown: this._onFabricMouseDown.bind(this),
       mousemove: this._onFabricMouseMove.bind(this),
@@ -34,14 +31,12 @@ class TextTrackItem {
   createGroup() {
     const { start } = this;
     const x = this.getTimeline().convertTimeToPos(start);
-    console.log('createGroup start:', start, ',x:', x);
-    const views = [];
-    this.frameViews.forEach((fv) => {
-      if (!fv.exclude) {
-        views.push(fv);
-      }
-    });
-    console.log('views:', views);
+    const views = this.frameViews;
+    // this.frameViews.forEach((fv) => {
+    //   if (!fv.exclude) {
+    //     views.push(fv);
+    //   }
+    // });
     const itemPanel = new fabric.Group(views, {
       left: x,
       top: this.top,
@@ -51,7 +46,7 @@ class TextTrackItem {
       lockScalingX: true,
       lockScalingY: true,
       hasControls: false,
-      selectable: false,
+      selectable: true,
       hoverCursor: 'default',
     });
     // selectable: false,
@@ -61,49 +56,30 @@ class TextTrackItem {
   }
 
   filterFrameViews() {
-    let lastFile;
-    const count = this.files.length;
-    const [startAt, endAt] = this.timeRange;
-    console.log('filterFrameViews timeRange:', startAt, ',', endAt);
-    for (let i = 0; i < count; i += 1) {
-      const file = this.files[i];
-      file.exclude = false;
-      if (i + 1 >= startAt && i <= endAt) {
-        if (i > startAt && i - 1 < startAt && i > 0) {
-          this.startOffset = startAt - i + 1;
-          // file.w = (i - startAt) * this.space;
-          lastFile.w = (i - startAt) * this.space;
-          file.w = this.space;
-        } else if (i < endAt && i + 1 > endAt) {
-          file.w = (endAt - i) * this.space;
-        } else {
-          file.w = this.space;
-        }
-      } else {
-        file.w = this.space;
-        file.exclude = true;
-        console.log('exclude:', i);
-      }
-      lastFile = file;
+    // let lastFile;
+    if (this.files.length > 0) {
+      const [file] = this.files;
+      file.w = this.space * this.getDuration();
     }
   }
 
   setup() {
     const { start } = this;
-    console.log('setup start:', start);
     this.range[0] = this.getTimeline().convertTimeToPos(start);
     this.timeRange[0] = 0;
     const end = start + this.duration;
     this.range[1] = this.getTimeline().convertTimeToPos(end);
     this.timeRange[1] = this.timeRange[0] + this.context.duration;
-    this.filterFrameViews();
+    // this.filterFrameViews();
 
     return this.setFrames().then(() => {
       return this._make();
+      // console.log('set frames ok.', currentProgress);
     });
   }
 
   _make() {
+    // const width = this.space * this.getDuration();
     const group = this.createGroup();
 
     return new Promise((resolve) => {
@@ -128,96 +104,29 @@ class TextTrackItem {
   setFrames() {
     this.frameViews = [];
     this.labels = [];
-    const { start, files, space } = this;
-    const end = this.start + this.getDuration();
+    // const { start, space } = this;
+    // const end = this.start + this.getDuration();
+
     return new Promise((resolve) => {
-      this._loopNewImage({ i: start, start, end, files, space }, () => {
+      this._newPolygon(() => {
         resolve();
       });
     });
   }
 
-  updateFrames() {
-    this.labels = [];
-    const { start, files, space } = this;
-    const end = this.start + this.duration;
-    return new Promise((resolve) => {
-      this.frameViews.forEach((fv) => {
-        fv.exclude = true;
-      });
-      this._loopUpdateImage({ i: start, start, end, files, space }, () => {
-        resolve();
-      });
-    });
-  }
-
-  _loopUpdateImage({ i, start, end, files, space }, callback) {
-    let subIndex,
-      _end = end;
-    const height = this.boxHeight;
-    // const self = this;
-
-    if (Math.floor(end) < end) {
-      _end = Math.floor(end) + 1;
-    }
-    if (i >= _end) {
-      callback();
-
-      return;
-    }
-    const count = files.length;
-    // const x = this.getTimeline().convertTimeToPos(i);
-    const idx = Math.round(i - start);
-    subIndex = idx;
-    if (subIndex >= count) {
-      subIndex = count - 1;
-    }
-    const imgCount = this.frameViews.length;
-    const file = files[subIndex];
-    if (!file) {
-      callback();
-
-      return;
-    }
-    const imageOption = {
-      left: this.startOffset + idx * this.space,
-      top: 0,
-      width: this.space,
-      height,
-      hoverCursor: 'default',
-      selectable: false,
-    };
-    imageOption.scaleX = 1;
-    // imageOption.scaleX = file.w / imageOption.width;
-    if (imgCount > subIndex) {
-      imageOption.scaleX = file.w / imageOption.width;
-      console.log('subIndex:', subIndex, ',scaleX:', imageOption.scaleX);
-      if (subIndex > 0) {
-        imageOption.left = this.frameViews[subIndex - 1].rw + this.frameViews[subIndex - 1].left;
+  updateText() {
+    let txt;
+    if (this.frameViews.length > 0) {
+      const [, tb] = this.frameViews;
+      const { section } = this.context;
+      txt = section.text;
+      if (txt.length > 5) {
+        txt = txt.substring(0, 5);
       }
-      const fImage = this.frameViews[subIndex];
-      fImage.set(imageOption);
-      fImage.rw = file.w;
-      fImage.exclude = file.exclude;
-      this._loopUpdateImage({ i: i + 1, start, end, files, space }, callback);
-    } else if (imgCount === subIndex) {
-      const lastImage = this.frameViews[subIndex - 1];
-      imageOption.left = lastImage.rw + lastImage.left;
-      imageOption.scaleX = file.w / imageOption.width;
-      fabric.Image.fromURL(
-        file.url,
-        (fImage) => {
-          fImage.setOptions(imageOption);
-          fImage.time = i;
-          fImage.rw = file.w;
-          fImage.exclude = file.exclude;
-          this.frameViews.push(fImage);
-          this._loopUpdateImage({ i: i + 1, start, end, files, space }, callback);
-        },
-        {
-          crossOrigin: 'Anonymous',
-        }
-      );
+      tb.text = txt;
+      // const lineHeight = tb.calcTextHeight();
+      // this.boxHeight = lineHeight;
+      this.getCanvas().renderAll();
     }
   }
 
@@ -225,241 +134,207 @@ class TextTrackItem {
     return this.timeRange[1] - this.timeRange[0];
   }
 
-  _loopNewImage({ i, start, end, files, space }, callback) {
-    let subIndex;
-    const height = this.boxHeight;
-    // const self = this;
-    if (i >= end) {
-      callback();
-
-      return;
-    }
-    const count = files.length;
-    // const x = this.getTimeline().convertTimeToPos(i);
-    const idx = Math.round(i - start);
-    subIndex = idx;
-    if (subIndex >= count) {
-      subIndex = count - 1;
-    }
-    const imgCount = this.frameViews.length;
-    // console.log('_loopNewImage subIndex:', subIndex);
-    const file = files[subIndex];
-    // console.log(`[${subIndex}]=>`, file.url, ',idx pos:', this.space * idx);
-    const imageOption = {
-      left: this.startOffset + idx * this.space,
+  setupRect(width, height) {
+    const options = {
+      left: 0,
       top: 0,
-      width: this.space,
+      width,
       height,
       hoverCursor: 'default',
       selectable: false,
+      fill: 'transparent',
+      backgroundColor: 'transparent', // transparent
+      strokeWidth: 0,
+      originX: 'left',
     };
-    imageOption.scaleX = file.w / imageOption.width;
-    if (imgCount > 0) {
-      imageOption.left = this.frameViews[imgCount - 1].rw + this.frameViews[imgCount - 1].left;
-    }
+    const rect = new fabric.Rect(options);
+    this.frameViews.push(rect);
+  }
 
-    fabric.Image.fromURL(
-      file.url,
-      (fImage) => {
-        fImage.setOptions(imageOption);
-        fImage.time = i;
-        fImage.rw = file.w;
-        fImage.exclude = file.exclude;
-        this.frameViews.push(fImage);
-        this._loopNewImage({ i: i + 1, start, end, files, space }, callback);
-      },
-      {
-        crossOrigin: 'Anonymous',
-      }
-    );
+  _newPolygon(callback) {
+    const { section } = this.context;
+    const height = this.boxHeight;
+    const width = this.space * this.getDuration();
+    // console.log('_newPolygon width:', width, ',height:', height);
+    const options = {
+      left: 0,
+      top: 0,
+      width,
+      height,
+      hoverCursor: 'default',
+      selectable: false,
+      stroke: section.fill,
+      fill: '#898989',
+      backgroundColor: 'transparent', // transparent
+      strokeWidth: 1,
+      originX: 'left',
+      fontSize: '14',
+    };
+    // const polygon = new fabric.Polygon(this.points, options);
+
+    const polygon = new fabric.Text('', options);
+    this.setupRect(width, height);
+    this.frameViews.push(polygon);
+    this.updateText();
+    callback();
   }
 
   timeChanged(time) {
     const x = this.getTimeline().convertTimeToPos(this.start);
     this.itemPanel.left = x + time;
-    const { left, top, width, height } = this.itemPanel;
-    this.fire('track:item:move', { left, top, width, height });
+    this.syncOffset();
     this.xyRange[0] = this.itemPanel.left;
     this.xyRange[1] = this.itemPanel.left + this.itemPanel.width;
     this.itemPanel.setCoords();
   }
 
-  increaseDuration(delta) {
-    let n;
-    const count = this.files.length;
-    n = Math.floor(delta);
-    if (n < delta) {
-      n += 1;
-    }
-    const file = this.files[count - 1];
-    // console.log('increaseDuration file:', file, ',delta:', delta);
-    for (let i = 0; i < n; i += 1) {
-      const _file = {};
-      extend(_file, file);
-      this.files.push(_file);
-    }
-    this.context.duration += delta;
-    this.duration = this.context.duration;
-    const { start } = this;
-    const end = start + this.duration;
-    this.range[1] = this.getTimeline().convertTimeToPos(end);
-    const total = this.track.totalDuration();
-    if (total > this.getTimeline().duration) {
-      return this.getTimeline().changeDuration(total);
-    }
-
-    return Promise.resolve();
+  syncOffset() {
+    const { left, top, width, height } = this.getRect();
+    this.fire('track:text:move', { left, top, width, height });
   }
 
   updateStart(newStart) {
     const { start } = this;
     if (newStart !== start) {
-      // const x = this.getTimeline().convertTimeToPos(start);
-      console.log('newStart:', newStart, ',start:', start);
+      const { section } = this.context;
+      const x = this.getTimeline().convertTimeToPos(start);
+      // console.log('newStart:', newStart, ',start:', start);
       const newX = this.getTimeline().convertTimeToPos(newStart);
       // console.log('newX:', newX, ',x:', x);
       this.range[0] = newX;
       const end = newStart + this.duration;
       this.range[1] = this.getTimeline().convertTimeToPos(end);
       this.start = newStart;
-      // const diff = newX - x;
-      this.itemPanel.left = newX;
+      const diff = newX - x;
+      this.itemPanel.left += diff;
       this.xyRange[0] = this.itemPanel.left;
       this.xyRange[1] = this.itemPanel.left + this.itemPanel.width;
       this.itemPanel.setCoords();
-      this.track.timeline.fire('track:item:sorted', {
+      this.textTrack.timeline.fire('track:text:scale', {
+        section,
         start: this.start,
         range: this.timeRange,
-        context: this.context,
       });
-      this.getTimeline().updateActiveObj(this.itemPanel);
     }
+  }
+
+  updatePoint() {
+    const width = this.space * this.getDuration();
+    // const [polygon] = this.frameViews;
+    this.frameViews.forEach((item) => {
+      item.set({ width });
+      item.setCoords();
+    });
+    // const width = this.space * this.getDuration();
+    // polygon.set({ width });
+    // polygon.setCoords();
+  }
+
+  increaseDuration(delta) {
+    this.context.duration += delta;
+    this.duration = this.context.duration;
+    this.context.section.dur = this.duration;
   }
 
   updateSize({ left, right }) {
     let newT, delta;
     // console.log('updateSize left:', left, ',right:', right);
     const { duration } = this.context;
-    const t = this.getDuration();
-    if (t < 1) {
-      return;
-    }
 
     const reBuild = () => {
-      // console.log('new timeRange:', this.timeRange);
-
+      this.updatePoint();
       this.getCanvas().remove(this.itemPanel);
-      this.filterFrameViews();
-
-      this.updateFrames().then(() => {
-        // const currentProgress = this.getTimeline().getCurrentProgress();
-        this._make().then(() => {
-          this.track.active(this);
-          this.track.scaleAfter(this);
-          this.track.timeline.fire('track:item:scale', {
-            range: this.timeRange,
-            context: this.context,
-          });
+      this._make().then(() => {
+        this.textTrack.active(this);
+        // this.textTrack.scaleAfter(this);
+        this.getTimeline().fire('track:text:scale', {
+          section: this.context.section,
+          start: this.start,
+          range: this.timeRange,
         });
+        this.syncOffset();
       });
     };
+    const t = this.getDuration();
+    if (t < 1) {
+      this.timeRange[1] = this.timeRange[0] + 1;
+      reBuild();
 
+      return;
+    }
     if (left === 1) {
       newT = t * right;
       if (newT + this.timeRange[0] > duration) {
         delta = newT + this.timeRange[0] - duration;
-        if (this.isImage && delta > 0.01) {
+        if (delta >= 0.05) {
           delta = Math.floor(delta * 100) / 100;
           newT = delta + duration - this.timeRange[0];
           this.timeRange[1] = this.timeRange[0] + newT;
-          this.increaseDuration(delta).then(() => {
-            reBuild();
-            // this.getTimeline().getPanel().enable();
-          });
+          this.increaseDuration(delta);
+          reBuild();
 
           return;
         }
         newT = duration - this.timeRange[0];
       }
-      // 如果是图片可以超出原有duration，此时需要更新panel ticks
       this.timeRange[1] = this.timeRange[0] + newT;
       reBuild();
     } else {
       const timeDiff = t * (1 - left) + this.timeRange[0];
       if (timeDiff <= 0) {
         if (this.timeRange[0] === 0) {
-          this.track.active(this);
-
           return;
         }
         this.timeRange[0] = 0;
       } else {
         this.timeRange[0] = timeDiff;
-        //
       }
       reBuild();
     }
   }
 
   getTimeline() {
-    return this.track.timeline;
+    return this.textTrack.timeline;
   }
 
   getCanvas() {
-    return this.track.timeline.getCanvas();
+    return this.textTrack.timeline.getCanvas();
   }
 
   dispose() {
-    if (this.frameViews.length > 0) {
-      this.frameViews.forEach((img) => {
-        img.dispose();
-      });
-    }
-    if (this.transition) {
-      this.transition.dispose();
-      this.transition = null;
-    }
     this.getCanvas().remove(this.itemPanel);
-    this.track.remove(this);
-  }
-
-  setTransition() {
-    /*
-    if (!this.transition) {
-      this.transition = new Transition(this, options, context);
-      this.transition.setup().then(() => {
-        this.transition.show(this);
-      });
-    } else {
-      this.transition.recover();
-      this.transition.show(this);
-    }
-    */
+    this.textTrack.remove(this);
   }
 
   hideTransition() {
     if (this.transition) {
-      this.transition.dispose();
-      this.hasTransition = false;
+      this.transition.hide();
     }
   }
 
   removeTransition() {
     if (this.transition) {
-      this.transition.dispose();
+      this.transition.remove();
     }
   }
 
   getRect() {
-    const { left, top, width, height } = this.itemPanel;
-
+    const { left, top, height } = this.itemPanel;
+    const width = this.space * this.getDuration();
     return { left, top, width, height };
+  }
+
+  updateTop(top) {
+    if (top !== this.top) {
+      this.top = top;
+      this.itemPanel.set({ top });
+      this.itemPanel.setCoords();
+    }
   }
 
   _bindEventOnObj(fObj, cb) {
     const self = this;
     const canvas = this.getCanvas();
-
     fObj.on({
       added() {
         if (cb) {
@@ -474,45 +349,12 @@ class TextTrackItem {
         self._isSelected = false;
         self._shapeObj = null;
       },
-      modifiedInGroup(activeSelection) {
-        console.log('modifiedInGroup in activeSelection:', activeSelection);
-      },
+      modifiedInGroup() {},
       mousedown(fEvent) {
         self._startPoint = canvas.getPointer(fEvent.e);
-        // console.log('track item mousedown _startPoint:', self._startPoint);
-        self.track.active(self);
-        // this.track.timeline.fire('track:item:active', {
-        //   range: this.timeRange,
-        //   context: this.context,
-        // });
+        self.textTrack.active(self);
       },
-      moving(fEvent) {
-        const _startPoint = canvas.getPointer(fEvent.e);
-        // const { x, y } = _startPoint, { sx = x, sy = y } = self._startPoint;
-        self._startPoint = _startPoint;
-        console.log('trackitem moving _startPoint:', _startPoint);
-        /*
-        const diff = self.range[0] - this.left;
-        if (diff < 0) {
-          this.left = self.range[0];
-          if (!self.checkInCache(0)) {
-            // self.timeline.fire('time:head', { progress: 0 });
-            self.timeline.indicatorMoved({ progress: 0 });
-          }
-        } else if (diff > self.range[1]) {
-          this.left = self.range[0] - self.range[1];
-          if (!self.checkInCache(1)) {
-            // self.timeline.fire('time:end', { progress: 1 });
-            self.timeline.indicatorMoved({ progress: 1 });
-          }
-        } else {
-          const progress = diff / self.range[1];
-          if (!self.checkInCache(progress)) {
-            self.timeline.indicatorMoved({ progress });
-          }
-        }
-        */
-      },
+      moving() {},
     });
   }
 
@@ -523,6 +365,6 @@ class TextTrackItem {
   _onFabricMouseUp() {}
 }
 
-CustomEvents.mixin(TextTrackItem);
+CustomEvents.mixin(TextItem);
 
-export default TextTrackItem;
+export default TextItem;

@@ -1,7 +1,7 @@
 // import snippet from 'tui-code-snippet';
 import fabric from 'fabric';
 import Component from '@/timeline/component';
-import { tlComponentNames } from '@/consts';
+import { tlComponentNames, eventNames } from '@/consts';
 
 const pad = 0;
 const defaultLineHeight = 5;
@@ -27,6 +27,15 @@ class Panel extends Component {
     // tickschanged: this._onTicksChanged.bind(this),
     this.changeCache = {};
     this.start();
+  }
+
+  resize() {
+    if (this.tickPanel) {
+      const center = this.timeline.getCenter();
+      const { left } = center;
+      this.tickPanel.set({ left });
+      this._onItemChanged();
+    }
   }
 
   setup({ count, space, maxHeight }) {
@@ -182,21 +191,28 @@ class Panel extends Component {
 
   start() {
     this.timeline.on({
+      [eventNames.PANEL_POS_CHANGED]: this._handlers.poschanged,
       'track:remove': this._handlers.itemRemove,
       'track:add': this._handlers.itemAdd,
       'track:item:scale': this._handlers.itemChanged,
       'track:item:changed': this._handlers.itemChanged,
       'track:wave:scale': this._handlers.itemChanged,
+      'track:text:scale': this._handlers.itemChanged,
+      'track:text:new': this._handlers.itemChanged,
+      'track:animation:new': this._handlers.itemChanged,
     });
   }
 
   end() {
     this.timeline.off({
+      [eventNames.PANEL_POS_CHANGED]: this._handlers.poschanged,
       'track:remove': this._handlers.itemRemove,
       'track:add': this._handlers.itemAdd,
       'track:item:scale': this._handlers.itemChanged,
       'track:item:changed': this._handlers.itemChanged,
       'track:wave:scale': this._handlers.itemChanged,
+      'track:text:scale': this._handlers.itemChanged,
+      'track:text:new': this._handlers.itemChanged,
     });
   }
 
@@ -217,6 +233,16 @@ class Panel extends Component {
     return 0;
   }
 
+  convertPosToTime(x) {
+    const diff = x - this._left;
+    // const diff = this.range[0] - x;
+    const time = (diff * this.count) / this.range[1];
+    const n = Math.floor(time / 0.05);
+    const _time = Math.floor(n * 0.05 * 100) / 100;
+
+    return _time;
+  }
+
   getLeftPosByProgress(time) {
     const progress = time / this.count;
     if (!progress || progress < 0 || progress > 1) {
@@ -232,30 +258,49 @@ class Panel extends Component {
   }
 
   checkInRound(leftPosition, rightPosition) {
-    const offset = this.getPosOffset(this.getCurrentProgress());
-    leftPosition -= offset;
-    rightPosition -= offset;
-    if (leftPosition >= this.range[0] && rightPosition <= this.range[0] + this.range[1]) {
-      return true;
+    const leftoffset = leftPosition - this._left; // this.getPosOffset(this.getCurrentProgress());
+    const rightoffset = rightPosition - this._left;
+    // leftPosition -= offset;
+    // rightPosition -= offset;
+    // console.log('checkInRound:', this.range);
+    // console.log('leftoffset:', leftoffset, ',rightoffset:', rightoffset);
+    // console.log('checkInRound leftPosition:', leftPosition, ',rightPosition:', rightPosition);
+    if (
+      leftoffset >= 0 &&
+      leftoffset <= this.range[1] &&
+      rightoffset >= 0 &&
+      rightoffset <= this.range[1]
+    ) {
+      return { left: leftPosition, right: rightPosition };
+    }
+    if (leftoffset < 0) {
+      leftPosition = this._left;
+      rightPosition -= leftoffset;
+    }
+    if (rightoffset > this.range[1]) {
+      const diff = rightoffset - this.range[1];
+      leftPosition -= diff;
+      rightPosition -= diff;
     }
 
-    return false;
+    return { left: leftPosition, right: rightPosition };
   }
 
   _onPosChanged({ progress }) {
-    if (!progress || progress < 0 || progress > 1) {
+    if (progress < 0 || progress > 1) {
       return;
     }
     if (this.tickPanel && progress) {
       const diff = progress * this.range[1];
       this.tickPanel.left = this.range[0] - diff;
       this.changeCache.progress = progress;
-      if (!this.checkInCache(progress)) {
-        const time = progress * this.count;
-        const n = Math.floor(time / 0.05);
-        const _time = Math.floor(n * 0.05 * 100) / 100;
-        this.timeline.indicatorMoved({ time: _time, progress });
-      }
+      // if (!this.checkInCache(progress)) {
+      const time = progress * this.count;
+      const n = Math.floor(time / 0.05);
+      const _time = Math.floor(n * 0.05 * 100) / 100;
+      this.tickPanel.setCoords();
+      this.timeline.indicatorMoved({ time: _time, progress });
+      // }
     }
   }
 
@@ -435,26 +480,6 @@ class Panel extends Component {
         // console.log('panel moving _x:', x - sx, ',_y:', y - sy);
         const diff = self.range[0] - this.left;
         self._adjustDiff(diff, this);
-        /*
-        if (diff < 0) {
-          this.left = self.range[0];
-          if (!self.checkInCache(0)) {
-            // self.timeline.fire('time:head', { progress: 0 });
-            self.timeline.indicatorMoved({ time: 0, progress: 0 });
-          }
-        } else if (diff > self.range[1]) {
-          this.left = self.range[0] - self.range[1];
-          if (!self.checkInCache(1)) {
-            // self.timeline.fire('time:end', { progress: 1 });
-            self.timeline.indicatorMoved({ time: self.range[1] / self.space, progress: 1 });
-          }
-        } else {
-          const progress = diff / self.range[1];
-          if (!self.checkInCache(progress)) {
-            self.timeline.indicatorMoved({ time: diff / self.space, progress });
-          }
-        }
-        */
       },
     });
   }

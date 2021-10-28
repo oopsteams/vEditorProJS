@@ -198,8 +198,8 @@ class TrackTransition {
       selected() {
         self._isSelected = true;
         self._shapeObj = this;
-        console.log('transition selected!!!');
         self.track.active(self);
+        self.track.timeline.fire('slip:item:selected', { item: self, isLast: false });
       },
       deselected() {
         self._isSelected = false;

@@ -34,6 +34,13 @@ body > textarea
         background-color: #151515;
         top: 0;
         width: 100%;
+        .-main-controls
+            display: table-cell;
+            align-items: center;
+            vertical-align: middle;
+        .-header-btn
+            display: table;
+            vertical-align: middle;
     .-header-buttons,
     .-controls-buttons
         float: right;
@@ -46,6 +53,10 @@ body > textarea
         padding-top: 7px;
     .-header-menu
         flex: auto;
+        display: table;
+        .-controls
+            display: table-cell;
+            vertical-align: middle;
     .-controls-buttons
         width: 270px;
         height: 100%;
@@ -116,7 +127,7 @@ body > textarea
                 vertical-align: middle;
     .
       position: relative;
-      display: inline-block;
+      display: flex;
       width: 100%;
       height: 100%;
       text-align: center;
@@ -131,26 +142,30 @@ body > textarea
       flex-direction: column;
       .-layer-top
         width: 100%;
-        max-height: 50px;
-        border: 0px solid green;
+        height: 45px;
+        border-bottom: 1px solid white;
+        display: flex;
       .-layer-main
         width: 100%;
-        height: 50%;
+        height: 55%;
         min-height: 120px;
         border: 0px solid blue;
         display flex;
+        overflow: hidden;
+        overflow-y: auto;
         flex-direction: row;
         .-layer-main-left
-          height: 100%;
+          /*height: 100%;*/
           width: left_menu_width;
           border: 0px solid red;
         .-layer-main-mid
-          height: 100%;
+          /*height: 100%;*/
           width: "-webkit-calc(50% - %s)" % left_menu_width;
           width: "-moz-calc(50% - %s)" % left_menu_width;
           width: "calc(50% - %s)" % left_menu_width;
-          border: 0px solid green;
+          border: 0px;
           overflow-x: auto;
+          border-right: 1px solid white; 
         .-layer-main-right
           height: 100%;
           width: 50%;
@@ -231,4 +246,4 @@ body > textarea
         margin: auto;
     .{prefix}-layer-main-right
         .lower-canvas
-            border: 1px dashed silver;
+            border: 0px dashed silver;

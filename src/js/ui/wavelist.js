@@ -59,7 +59,7 @@ class WaveList extends TextureUI {
       },
       delete: () => {
         if (this.activedItem) {
-          console.log('waveItem context:', this.activedItem.context);
+          // console.log('waveItem context:', this.activedItem.context);
           this.activedItem.dispose();
           const { elemId } = this.activedItem.context;
           const parser = this.items[elemId];
@@ -68,6 +68,15 @@ class WaveList extends TextureUI {
             this.removeSubMenu(['delete']);
           }
         }
+      },
+      play: () => {
+        if (this.activedItem) {
+          // console.log('play activedItem :', this.activedItem);
+          this.playAudio();
+        }
+      },
+      pause: () => {
+        this.pauseAudio();
       },
     };
   }
@@ -87,12 +96,6 @@ class WaveList extends TextureUI {
 
   setTrackItem(trackItem) {
     this.trackItem = trackItem;
-    const { transition } = trackItem;
-    if (transition) {
-      const { elemId } = transition.context;
-      console.log('setTrackItem elemId:', elemId);
-      this.activeElement(elemId);
-    }
   }
 
   setActivedWaveItem(activedItem) {
@@ -123,18 +126,6 @@ class WaveList extends TextureUI {
     return false;
   }
 
-  _onTransitionsLoaded({ data }) {
-    if (data) {
-      data.forEach((tran) => {
-        if (!this.existTransitionData(tran)) {
-          const elem = this._appendItem('#', 120, 60, tran.label);
-          console.log('_onTransitionsLoaded elem:', elem);
-          this.items[elem] = tran;
-        }
-      });
-    }
-  }
-
   _onAddBtnClick(event) {
     let dataset;
     const { tagName } = event.target;
@@ -152,7 +143,6 @@ class WaveList extends TextureUI {
     // allDataMenus.forEach((dm) => {
     //   dm.classList.remove('active');
     // });
-    console.log('wavelist _onAddBtnClick elemId:', elemId, ',trackItem:', this.trackItem);
     this.activeElement(elemId);
     const parser = this.items[elemId];
     console.log('wavelist _onAddBtnClick parser:', parser);
@@ -182,16 +172,6 @@ class WaveList extends TextureUI {
     } else {
       this.getUI().timeLine.fire('track:wave:focus', { elemId });
     }
-    /*
-    this.ui.addTransition(this.trackItem, transitionItem.dur, transitionItem, () => {
-      // const menuElem = layerItem.querySelector(menuCss);
-      // menuElem.classList.add('active');
-      // console.log('sync add transition transitionItem:', transitionItem);
-      // console.log('add transition layerItem:', layerItem);
-      const section = this.parent.getSectionByItem(transitionItem.trackItem);
-      this.datasource.fire('track:transition:add', { transition: transitionItem, section });
-    });
-    */
   }
 
   activeElement(elemId) {
@@ -220,15 +200,49 @@ class WaveList extends TextureUI {
     }
   }
 
-  // remove(transitionItem) {
-  //   const layerItem = this._els.mainLayer.querySelector(`#${transitionItem.elemId}`);
-  //   const menuCss = `.${this.cssPrefix}-menu.check`;
-  //   const menuElem = layerItem.querySelector(menuCss);
-  //   menuElem.classList.remove('active');
-  //   console.log('remove menuElem:', menuElem, ',transitionItem:', transitionItem);
-  //   const section = this.parent.getSectionByItem(transitionItem.trackItem);
-  //   this.datasource.fire('audio:remove', { transition: transitionItem, section });
-  // }
+  pauseAudio() {
+    const audioplayer = this._els.mainLayer.querySelector(`.${this.cssPrefix}-audio`);
+    if (audioplayer) {
+      audioplayer.pause();
+      this.removeSubMenu(['pause']);
+      if (this.activedItem) {
+        this.addSubMenu(['play']);
+      }
+    }
+  }
+
+  playAudio() {
+    if (this.activedItem) {
+      const { elemId } = this.activedItem.context;
+      const parser = this.items[elemId];
+      const { previewUrl } = parser;
+      this.removeSubMenu(['play']);
+      this.addSubMenu(['pause']);
+      const audioplayer = this._els.mainLayer.querySelector(`.${this.cssPrefix}-audio`);
+
+      audioplayer.src = previewUrl;
+      audioplayer.addEventListener('timeupdate', () => {
+        // const percent = audioplayer.currentTime / audioplayer.duration;
+        const diff = audioplayer.currentTime - this.activedItem.timeRange[0];
+        const timePos = this.activedItem.start + diff;
+        if (audioplayer.currentTime >= this.activedItem.timeRange[1]) {
+          this.pauseAudio();
+        }
+        this.getUI().timeLine.changeTime(timePos);
+      });
+      audioplayer.addEventListener('ended', () => {
+        this.pauseAudio();
+      });
+      const ct = this.getUI().timeLine.getCurrentTime();
+      const gdiff = ct - this.activedItem.start;
+      if (gdiff > 0 && gdiff < this.activedItem.getDuration()) {
+        audioplayer.currentTime = this.activedItem.timeRange[0] + gdiff;
+      } else {
+        audioplayer.currentTime = this.activedItem.timeRange[0];
+      }
+      audioplayer.play();
+    }
+  }
 
   _appendItem(src, fileWidth, fileHeight, fileName) {
     let imgStyle = '',
@@ -284,22 +298,23 @@ class WaveList extends TextureUI {
     return layerItem.id;
   }
 
-  addDatasourceEvents() {
-    // const onTransitionsLoaded = this._onTransitionsLoaded.bind(this);
-    // this.datasource.on({
-    //   'transitions:loaded': onTransitionsLoaded,
-    // });
-  }
+  addDatasourceEvents() {}
 
   _onWaveActive({ item }) {
     if (this.actived) {
+      console.log('_onWaveActive item:', item);
       this.setActivedWaveItem(item);
+      this.removeSubMenu(['pause']);
+      this.addSubMenu(['play']);
     }
   }
 
   _onWaveDeactive({ item }) {
     if (this.activedItem === item) {
+      console.log('_onWaveActive item:', item);
       this.setActivedWaveItem(null);
+      this.removeSubMenu(['play', 'pause']);
+      this.pauseAudio();
     }
   }
 

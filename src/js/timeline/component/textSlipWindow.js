@@ -1,7 +1,7 @@
 import fabric from 'fabric';
-import snippet from 'tui-code-snippet';
+// import snippet from 'tui-code-snippet';
 import { winControls } from '@/timeline/controls';
-const { CustomEvents } = snippet;
+// const { CustomEvents } = snippet;
 class TextSlipWindow {
   constructor(track) {
     this.name = 'textSlipWindow';
@@ -27,7 +27,7 @@ class TextSlipWindow {
       lockScalingY: true,
       height: tickHeight,
       stroke: '#ffd727',
-      fill: 'rgba(255,255,255,0.5)',
+      fill: 'rgba(255,255,255,0.1)',
     };
     this.win = new fabric.Rect(options);
     this.win.controls = winControls;
@@ -54,7 +54,7 @@ class TextSlipWindow {
     this.win.bringToFront();
     this.getTimeline().updateActiveObj(this.win);
     this.target.on({
-      'track:item:move': this._handlers.targetmove,
+      'track:text:move': this._handlers.targetmove,
     });
   }
 
@@ -62,7 +62,7 @@ class TextSlipWindow {
     this.win.visible = false;
     if (this.target) {
       this.target.off({
-        'track:item:move': this._handlers.targetmove,
+        'track:text:move': this._handlers.targetmove,
       });
       this.win.sendToBack();
     }
@@ -109,11 +109,18 @@ class TextSlipWindow {
       selected() {
         self._isSelected = true;
         self._shapeObj = this;
+        if (self.target) {
+          const isLast = self.track.isLastItem(self.target);
+          self.track.timeline.fire('slip:text:selected', { item: self.target, isLast });
+        }
       },
       deselected() {
         self._isSelected = false;
         self._shapeObj = null;
-        self.fire('slip:deselected', {});
+        if (self.target) {
+          const isLast = self.track.isLastItem(self.target);
+          self.track.timeline.fire('slip:text:deselected', { item: self.target, isLast });
+        }
       },
       modifiedInGroup(activeSelection) {
         console.log('modifiedInGroup in activeSelection:', activeSelection);
@@ -125,7 +132,9 @@ class TextSlipWindow {
       mouseup(fEvent) {
         if (self.isMoving) {
           const permit = self.track.timeline.checkInRound(this.left, this.left + this.width);
+          console.log('text slip win left:', this.left);
           if (permit) {
+            this.left = permit.left;
             const { x } = canvas.getPointer(fEvent.e);
             if (this.left !== self.targetRect.left) {
               self.track
@@ -143,6 +152,7 @@ class TextSlipWindow {
                 });
             }
           } else {
+            console.log('text slip win left(permit is false):', this.left);
             this.left = self.targetRect.left;
           }
         }
@@ -224,7 +234,5 @@ class TextSlipWindow {
     this.updateTargetRect();
   }
 }
-
-CustomEvents.mixin(TextSlipWindow);
 
 export default TextSlipWindow;

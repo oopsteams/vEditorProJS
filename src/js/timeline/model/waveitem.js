@@ -38,8 +38,6 @@ class WaveItem {
         views.push(fv);
       }
     });
-    console.log('views:', views);
-    window.waveViews = views;
     const itemPanel = new fabric.Group(views, {
       left: x,
       top: this.top,
@@ -63,6 +61,14 @@ class WaveItem {
     if (this.files.length > 0) {
       const [file] = this.files;
       file.w = this.space * this.getDuration();
+    }
+  }
+
+  updateTop(top) {
+    if (top !== this.top) {
+      this.top = top;
+      this.itemPanel.set({ top });
+      this.itemPanel.setCoords();
     }
   }
 
@@ -162,11 +168,17 @@ class WaveItem {
     // console.log('waveitem timeChanged:', time);
     const x = this.getTimeline().convertTimeToPos(this.start);
     this.itemPanel.left = x + time;
-    const { left, top, width, height } = this.getRect();
-    this.fire('track:wave:move', { left, top, width, height });
+    // const { left, top, width, height } = this.getRect();
+    // this.fire('track:wave:move', { left, top, width, height });
+    this.syncWaveOffset();
     this.xyRange[0] = this.itemPanel.left;
     this.xyRange[1] = this.itemPanel.left + this.itemPanel.width;
     this.itemPanel.setCoords();
+  }
+
+  syncWaveOffset() {
+    const { left, top, width, height } = this.getRect();
+    this.fire('track:wave:move', { left, top, width, height });
   }
 
   updateStart(newStart) {
@@ -204,7 +216,26 @@ class WaveItem {
     // console.log('updateSize left:', left, ',right:', right);
     const { duration } = this.context;
     const t = this.getDuration();
+    const reBuild = () => {
+      this.updatePoint({ x0: this.timeRange[0] * this.space, x1: this.timeRange[1] * this.space });
+
+      this.getCanvas().remove(this.itemPanel);
+
+      this._make().then(() => {
+        this.waveTrack.active(this);
+        this.waveTrack.scaleAfter(this);
+        this.getTimeline().fire('track:wave:scale', {
+          range: this.timeRange,
+          context: this.context,
+        });
+        this.syncWaveOffset();
+      });
+    };
+
     if (t < 1) {
+      this.timeRange[1] = this.timeRange[0] + 1;
+      reBuild();
+
       return;
     }
     if (left === 1) {
@@ -224,19 +255,7 @@ class WaveItem {
         this.timeRange[0] = timeDiff;
       }
     }
-    this.updatePoint({ x0: this.timeRange[0] * this.space, x1: this.timeRange[1] * this.space });
-    console.log('new timeRange:', this.timeRange);
-
-    this.getCanvas().remove(this.itemPanel);
-
-    this._make().then(() => {
-      this.waveTrack.active(this);
-      this.waveTrack.scaleAfter(this);
-      this.getTimeline().fire('track:wave:scale', {
-        range: this.timeRange,
-        context: this.context,
-      });
-    });
+    reBuild();
   }
 
   getTimeline() {
@@ -329,16 +348,7 @@ class WaveItem {
     }
   }
 
-  _onFabricMouseUp() {
-    // const canvas = this.getCanvas();
-    // const startPointX = this._startPoint.x;
-    // const startPointY = this._startPoint.y;
-    // const shape = this._shapeObj;
-    // canvas.off({
-    //   'mouse:move': this._handlers.mousemove,
-    //   'mouse:up': this._handlers.mouseup,
-    // });
-  }
+  _onFabricMouseUp() {}
 }
 
 CustomEvents.mixin(WaveItem);

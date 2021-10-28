@@ -1,14 +1,4 @@
-export default ({
-  locale,
-  biImage,
-  commonStyle,
-  headerStyle,
-  loadButtonStyle,
-  downloadButtonStyle,
-  uploadButtonStyle,
-  cStyle,
-  cssPrefix,
-}) => `
+export default ({ biImage, commonStyle, headerStyle, cStyle, cssPrefix }) => `
   <div class="${cssPrefix}-main-layer">
     <div class="${cssPrefix}-layer-top">
       <div class="${cssPrefix}-header" style="${headerStyle}">
@@ -23,24 +13,12 @@ export default ({
             <div class="${cssPrefix}-main-controls" style="${cStyle}">
                 <ul class="${cssPrefix}-main-menu"></ul>
             </div>
-              <!--
-              <div style="${loadButtonStyle}">
-                  ${locale.localize('Load')}
-                  <input type="file" class="${cssPrefix}-load-btn" />
-              </div>
-              <button class="${cssPrefix}-download-btn" style="${downloadButtonStyle}">
-                  ${locale.localize('Download')}
-              </button>
-              <button class="${cssPrefix}-download-btn" style="${uploadButtonStyle}">
-                  ${locale.localize('Upload')}
-              </button>
-              -->
           </div>
           
       </div>
     </div>
     <div class="${cssPrefix}-layer-main">
-      <div class="${cssPrefix}-layer-main-left">素材菜单栏</div>
+      <div class="${cssPrefix}-layer-main-left"></div>
       <div class="${cssPrefix}-layer-main-mid"></div>
       <div class="${cssPrefix}-layer-main-right">
         <!-- 视频窗口 -->

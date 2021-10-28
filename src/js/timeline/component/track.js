@@ -42,6 +42,27 @@ class Track extends Component {
     return this.previewItemHeight;
   }
 
+  getYOffset() {
+    let top = 0,
+      height = 0;
+    if (this.groups.length > 0) {
+      this.groups.forEach((ti) => {
+        const { top: _top, height: _height } = ti.getRect();
+        if (top < _top) {
+          top = _top;
+        }
+        if (height < _height) {
+          height = _height;
+        }
+      });
+    } else {
+      top = this.top;
+      height = this.getBoxHeight();
+    }
+
+    return { top, height };
+  }
+
   totalDuration() {
     let total = 0;
     this.groups.forEach((ti) => {
@@ -83,13 +104,24 @@ class Track extends Component {
     // return Promise.resolve();
   }
 
+  getItemByTransition(transition) {
+    if (transition) {
+      for (let i = 0, n = this.groups.length; i < n; i += 1) {
+        const g = this.groups[i];
+        if (g.transition && g.transition === transition) {
+          return g;
+        }
+      }
+    }
+
+    return null;
+  }
+
   addTransition(trackItem, start, duration, space, context) {
     const total = this.totalDuration();
     start = start + total;
     const { item, next } = this.getTransitionItems(trackItem);
-
     if (item.transition) {
-      console.log('transition exist!!!!!!!');
       item.transition.context = context;
       if (!item.hasTransition) {
         item.hasTransition = true;
@@ -172,6 +204,7 @@ class Track extends Component {
         // ti.hasTransition = false;
         this.groups.push(ti);
         this.timeline.fire('track:add', { track: this });
+        this.unlock();
 
         return Promise.resolve();
       });
@@ -179,6 +212,7 @@ class Track extends Component {
   }
 
   setCurrentItem(item) {
+    console.log('setCurrentItem item:', item);
     this.currentItem = item;
   }
 
@@ -191,14 +225,23 @@ class Track extends Component {
   }
 
   active(item) {
+    this.setCurrentItem(item);
     if (this.locked) {
       return;
     }
-    this.setCurrentItem(item);
-    const isLast = item === this.groups[this.groups.length - 1];
-    this.timeline.fire('track:item:active', { item, isLast });
+    // const isLast = item === this.groups[this.groups.length - 1];
+    // this.timeline.fire('track:item:active', { item, isLast });
     if (!this.isTransition(item)) {
       this.slipWinndow.show(item);
+    }
+  }
+
+  focus() {
+    console.log('track focus currentItem:', this.currentItem);
+    if (this.currentItem) {
+      this.active(this.currentItem);
+      const isLast = this.isLastItem(this.currentItem);
+      this.timeline.fire('slip:item:selected', { item: this.currentItem, isLast });
     }
   }
 
@@ -216,6 +259,8 @@ class Track extends Component {
     this.locked = false;
     if (this.currentItem) {
       this.active(this.currentItem);
+      const isLast = this.isLastItem(this.currentItem);
+      this.timeline.fire('track:item:active', { item: this.currentItem, isLast });
     }
   }
 
@@ -255,9 +300,20 @@ class Track extends Component {
     }
   }
 
+  clearAll() {
+    const gs = [];
+    this.groups.forEach((g) => {
+      gs.push(g);
+    });
+    gs.forEach((g) => {
+      g.dispose();
+    });
+    this.currentItem = null;
+  }
+
   start() {
     this.timeline.on({
-      [eventNames.PANEL_POS_CHANGED]: this._handlers.timechanged,
+      // [eventNames.PANEL_POS_CHANGED]: this._handlers.timechanged,
       [eventNames.PANEL_TICKS_CHANGED]: this._handlers.tickschanged,
       [eventNames.TIME_CHANGED]: this._handlers.timechanged,
       [eventNames.SYNC_TIME_CHANGED]: this._handlers.syncTimeChanged,
@@ -267,7 +323,7 @@ class Track extends Component {
   end() {
     this._isSelected = false;
     this.timeline.off({
-      [eventNames.PANEL_POS_CHANGED]: this._handlers.timechanged,
+      // [eventNames.PANEL_POS_CHANGED]: this._handlers.timechanged,
       [eventNames.PANEL_TICKS_CHANGED]: this._handlers.tickschanged,
       [eventNames.TIME_CHANGED]: this._handlers.timechanged,
       [eventNames.SYNC_TIME_CHANGED]: this._handlers.syncTimeChanged,
@@ -325,24 +381,6 @@ class Track extends Component {
     this.groups.forEach((g) => {
       g.timeChanged(x);
     });
-  }
-
-  checkInCache(newProgress) {
-    const { version, progress } = this.changeCache;
-    if (version !== this.version) {
-      this.changeCache.version = this.version;
-      this.changeCache.progress = newProgress;
-
-      return false;
-    }
-    if (newProgress !== progress) {
-      this.changeCache.version = this.version;
-      this.changeCache.progress = newProgress;
-
-      return false;
-    }
-
-    return true;
   }
 
   updateStart(items, newStart) {
@@ -466,34 +504,9 @@ class Track extends Component {
 
   _onFabricMouseDown() {}
 
-  _onFabricMouseMove(fEvent) {
-    const canvas = this.getCanvas();
-    const pointer = canvas.getPointer(fEvent.e);
-    const startPointX = this._startPoint.x;
-    const startPointY = this._startPoint.y;
-    const width = startPointX - pointer.x;
-    const height = startPointY - pointer.y;
-    const shape = this._shapeObj;
+  _onFabricMouseMove() {}
 
-    if (!shape) {
-      // this._shapeObj.set({
-      //   isRegular: this._withShiftKey,
-      // });
-      console.log('width:', width, ',height:', height);
-    }
-  }
-
-  _onFabricMouseUp() {
-    const canvas = this.getCanvas();
-    // const startPointX = this._startPoint.x;
-    // const startPointY = this._startPoint.y;
-    // const shape = this._shapeObj;
-
-    canvas.off({
-      'mouse:move': this._handlers.mousemove,
-      'mouse:up': this._handlers.mouseup,
-    });
-  }
+  _onFabricMouseUp() {}
 }
 
 export default Track;

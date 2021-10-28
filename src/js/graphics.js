@@ -113,6 +113,8 @@ class Graphics {
      */
     this._handler = {
       onMouseDown: this._onMouseDown.bind(this),
+      onMouseUp: this._onMouseUp.bind(this),
+      onMouseMove: this._onMouseMove.bind(this),
       onObjectAdded: this._onObjectAdded.bind(this),
       onObjectRemoved: this._onObjectRemoved.bind(this),
       onObjectMoved: this._onObjectMoved.bind(this),
@@ -702,20 +704,31 @@ class Graphics {
 
   /* All Event Handlers */
   _onMouseDown(fEvent) {
-    const { e: event, target } = fEvent;
+    const { e: event } = fEvent;
     const originPointer = this._canvas.getPointer(event);
-
-    if (target) {
-      const { type } = target;
-      console.log('_onMouseDown target type:', type);
-      // const undoData = makeSelectionUndoData(target, (item) =>
-      //   makeSelectionUndoDatum(this.getObjectId(item), item, type === 'activeSelection')
-      // );
-
-      // setCachedUndoDataForDimension(undoData);
-    }
-
+    this._canvas.on({
+      'mouse:up': this._handler.onMouseUp,
+      'mouse:move': this._handler.onMouseMove,
+    });
+    // console.log('mouse down:', fEvent);
     this.fire(events.MOUSE_DOWN, event, originPointer);
+  }
+
+  _onMouseUp(fEvent) {
+    const { e: event } = fEvent;
+    const originPointer = this._canvas.getPointer(event);
+    // console.log('mouse up:', fEvent);
+    this._canvas.off({
+      'mouse:up': this._handler.onMouseUp,
+      'mouse:move': this._handler.onMouseMove,
+    });
+    this.fire(events.MOUSE_UP, event, originPointer);
+  }
+
+  _onMouseMove(fEvent) {
+    const { e: event } = fEvent;
+    const originPointer = this._canvas.getPointer(event);
+    this.fire(events.MOUSE_MOVE, event, originPointer);
   }
 
   _onObjectAdded(fEvent) {

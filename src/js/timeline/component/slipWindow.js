@@ -1,7 +1,7 @@
 import fabric from 'fabric';
-import snippet from 'tui-code-snippet';
+// import snippet from 'tui-code-snippet';
 import { winControls } from '@/timeline/controls';
-const { CustomEvents } = snippet;
+// const { CustomEvents } = snippet;
 class SlipWinndow {
   constructor(track) {
     this.name = 'slipWindow';
@@ -14,30 +14,56 @@ class SlipWinndow {
     };
   }
 
+  setupLabel() {
+    const options = {
+      left: 0,
+      top: 0,
+      width: 10,
+      hoverCursor: 'default',
+      selectable: false,
+      stroke: '#ffffff',
+      fill: '#898989',
+      backgroundColor: 'transparent',
+      strokeWidth: 1,
+      originX: 'left',
+      fontSize: '11',
+    };
+    this.lable = new fabric.Text('', options);
+    this.lable.visible = false;
+    this.getTimeline().add(this.lable);
+  }
+
   setup() {
     const tickHeight = 34;
     const options = {
       type: 'rect',
-      left: 10,
+      left: 0,
       top: 0,
-      width: 60,
+      width: 10,
       lockMovementY: true,
       lockRotation: true,
       lockScalingX: false,
       lockScalingY: true,
       height: tickHeight,
       stroke: '#ffd727',
-      fill: 'rgba(255,255,255,0.5)',
+      fill: 'rgba(255,255,255,0.1)',
     };
     this.win = new fabric.Rect(options);
     this.win.controls = winControls;
     this.win.visible = false;
     this._bindEventOnObj(this.win);
     this.getTimeline().add(this.win);
+    this.setupLabel();
+  }
+
+  updateLabel() {
+    if (this.target) {
+      const dur = Math.round(this.target.getDuration() * 100) / 100;
+      this.lable.text = `${dur}s`;
+    }
   }
 
   show(item) {
-    console.log('show skip window.');
     this.hide();
     this.target = item;
     const rect = this.updateTargetRect();
@@ -46,11 +72,15 @@ class SlipWinndow {
     // const { ml, mr } = this.win.oCoords;
     this.win.scaleX = 1;
     this.win.set(rect);
+    this.lable.set(rect);
     this.win.visible = true;
+    this.lable.visible = true;
+    this.updateLabel();
     // const canvas = this.getCanvas();
     // canvas.on({
     //   'mouse:down': this._handlers.mousedown,
     // });
+    this.lable.bringToFront();
     this.win.bringToFront();
     this.getTimeline().updateActiveObj(this.win);
     this.target.on({
@@ -60,6 +90,7 @@ class SlipWinndow {
 
   hide() {
     this.win.visible = false;
+    this.lable.visible = false;
     if (this.target) {
       this.target.off({
         'track:item:move': this._handlers.targetmove,
@@ -109,15 +140,21 @@ class SlipWinndow {
       selected() {
         self._isSelected = true;
         self._shapeObj = this;
+        if (self.target) {
+          const isLast = self.track.isLastItem(self.target);
+          self.track.timeline.fire('slip:item:selected', { item: self.target, isLast });
+        }
       },
       deselected() {
         self._isSelected = false;
         self._shapeObj = null;
-        self.fire('slip:deselected', {});
+        // self.fire('slip:deselected', {});
+        if (self.target) {
+          const isLast = self.track.isLastItem(self.target);
+          self.track.timeline.fire('slip:item:deselected', { item: self.target, isLast });
+        }
       },
-      modifiedInGroup(activeSelection) {
-        console.log('modifiedInGroup in activeSelection:', activeSelection);
-      },
+      modifiedInGroup() {},
       mousedown(fEvent) {
         self._startPoint = canvas.getPointer(fEvent.e);
         // console.log('panel mousedown _startPoint:', self._startPoint);
@@ -172,41 +209,11 @@ class SlipWinndow {
     return this.track.timeline;
   }
 
-  _onFabricMouseDown(fEvent) {
-    if (!fEvent.target) {
-      this._isSelected = false;
-      this._shapeObj = false;
-    }
+  _onFabricMouseDown() {}
 
-    if (!this._isSelected && !this._shapeObj) {
-      // this.hide();
-    }
-  }
+  _onFabricMouseMove() {}
 
-  _onFabricMouseMove() {
-    /*
-    const canvas = this.getCanvas();
-    if (!fEvent.e) {
-      const pointer = canvas.getPointer(fEvent.e);
-      const startPointX = this._startPoint.x;
-      const startPointY = this._startPoint.y;
-      const width = startPointX - pointer.x;
-      const height = startPointY - pointer.y;
-      console.log('width:', width, ',height:', height);
-    }
-    */
-  }
-
-  _onFabricMouseUp() {
-    // const canvas = this.getCanvas();
-    // const startPointX = this._startPoint.x;
-    // const startPointY = this._startPoint.y;
-    // const shape = this._shapeObj;
-    // canvas.off({
-    //   'mouse:move': this._handlers.mousemove,
-    //   'mouse:up': this._handlers.mouseup,
-    // });
-  }
+  _onFabricMouseUp() {}
 
   updateTargetRect() {
     const rect = this.target.getRect();
@@ -219,12 +226,13 @@ class SlipWinndow {
 
   _onTargetMove({ left, top }) {
     // console.log('_onTargetMove left:', left, ',top:', top);
+    this.lable.set({ left, top: top - 1 });
     this.win.set({ left, top: top - 1 });
+    this.lable.bringToFront();
     this.win.bringToFront();
     this.updateTargetRect();
   }
 }
 
-CustomEvents.mixin(SlipWinndow);
-
+// CustomEvents.mixin(SlipWinndow);
 export default SlipWinndow;
