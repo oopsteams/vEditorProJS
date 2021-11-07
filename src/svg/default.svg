@@ -44,6 +44,7 @@
     <path fill="inherit" stroke="inherit" d="M 25 2.5v4a1 1 0 0 0 1 0l0 -4a1 1 0 0 0 -1 0z" />
   </symbol>
   <symbol id="ic-split" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" d="M32 0H0v32h32z" opacity=".5"/>
     <path fill="inherit" stroke="inherit" d="M3 4h9a1 1 0 0 1 1 1v24a1 1 0 0 1 -1 1h-9a1 1 0 0 1 0 -1h9v-24h-9a1 1 0 0 1 0 -1z"/>
     <path fill="inherit" stroke="inherit" d="M28 4h-9a1 1 0 0 0 -1 1v24a1 1 0 0 0 1 1h9a1 1 0 0 0 0 -1h-9v-24h9a1 1 0 0 0 0 -1z"/>
   </symbol>
@@ -103,6 +104,47 @@
     <path stroke="inherit" fill="inherit" d="M9 25.5h-2a1 1 0 0 1-1-1v-16h1v16h2v1zm16-10h-1v-7h1v7z"/>        
     <path stroke="inherit" fill="inherit" d="M15.5 23.5h-2.5l-0.7 2h-1l1-2.8l1.5 -4h1l1.5 4l1 2.8h-1l-.7-2zm-0.3-1l-0.9 -2.5 -0.9 2.5z"/>
     <path stroke="inherit" fill="inherit" d="M24 24.5h3v1h-4v-7h1v6zm-5 0h3v1h-4v-7h1v6z"/>
+</symbol>
+<symbol id="ic-centers" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" d="M32 0H0v32h32z" opacity=".5"/>
+    <path stroke="inherit" fill="inherit" d="M12.5 11a4 4 0 1 0 -1 1a2 2 0 0 1 1 2a6 6 0 1 1 2 -2a2 2 0 0 1 -2 -1z"/>
+    <path stroke="inherit" fill="inherit" d="M11.5 19a4 4 0 1 0 1 1a2 2 0 0 1 2 -1a6 6 0 1 1 -2 -2a2 2 0 0 1 -1 2z"/>
+    <path stroke="inherit" fill="inherit" d="M19.5 11a4 4 0 1 1 1 1a2 2 0 0 0 -1 2a6 6 0 1 0 -2 -2a2 2 0 0 0 2 -1z"/>
+    <path stroke="inherit" fill="inherit" d="M20.5 19a4 4 0 1 1 -1 1a2 2 0 0 0 -2 -1a6 6 0 1 0 2 -2a2 2 0 0 0 1 2z"/>
+</symbol>
+<symbol id="ic-uinfo" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" d="M32 0H0v32h32z" opacity=".5"/>
+    <path stroke="inherit" fill="inherit" d="M16 15a4 4 0 1 0 -1 0a2 2 0 0 1 -1 2a6 6 0 1 1 3 0a2 2 0 0 1 -1 -2z"/>
+    <path stroke="inherit" fill="inherit" d="M16.5 19a8 8 0 0 1 8 4a2 2 0 0 1 -1 2a16 16 0 0 0 -16 0a2 2 0 0 1 -1 -2a8 8 0 0 1 8 -4z"/>
+</symbol>
+<symbol id="ic-help" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" d="M32 0H0v32h32z" opacity=".5"/>
+    <path stroke="inherit" fill="inherit" d="M12 13a4 4 0 1 1 4 2a2 2 0 0 0 -1 2v2a2 2 0 0 0 2 0v-1a2 2 0 0 1 1 -1a7 7 0 1 0 -9 -8a7 7 0 0 0 0.2 4a2 2 0 0 0 2 0z"/>
+    <path stroke="inherit" fill="inherit" d="M16 22a2 2 0 1 1 -1 0a2 2 0 0 0 -1 -2a4 4 0 1 0 3 0a2 2 0 0 0 -1 2z"/>
+</symbol>
+<symbol id="ic-auto" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" d="M32 0H0v32h32z" opacity=".5"/>
+    <path stroke="inherit" fill="inherit" d="M10.5 16.5h-2.5l-1 3h-2l3.3 -9h2l3.0 9h-2l-0.8-3zm-0.4 -1.6l-0.8 -2.5 -0.9 2.5z"/>
+    <path stroke="inherit" fill="inherit" d="M16.5 15h1v2a2 2 0 1 1 -4 0v-2h1v1.5a1 1 0 0 0 2 0v-1z"/>
+    <path stroke="inherit" fill="inherit" d="M24 11.5h-8a1 1 0 0 0 0 1h3v6a1 1 0 0 0 2 0v-6h3a1 1 0 0 0 0 -1z"/>
+    <path stroke="inherit" fill="inherit" d="M26.5 17a2 2 0 1 1 -4 0a2 2 0 1 1 4 0z"/>
+</symbol>
+<symbol id="ic-loading1" width="48px" height="60px" viewBox="0 0 24 30" style="enable-background:new 0 0 50 50">
+    <rect x="0" y="7.6416" width="4" height="14.7168" fill="inherit" opacity="0.2">
+        <animate attributeName="opacity" attributeType="XML" values="0.2; 1; .2" begin="0s" dur="0.6s" repeatCount="indefinite"></animate>
+        <animate attributeName="height" attributeType="XML" values="10; 20; 10" begin="0s" dur="0.6s" repeatCount="indefinite"></animate>
+        <animate attributeName="y" attributeType="XML" values="10; 5; 10" begin="0s" dur="0.6s" repeatCount="indefinite"></animate>
+    </rect>
+    <rect x="8" y="5.1416" width="4" height="19.7168" fill="inherit" opacity="0.2">
+        <animate attributeName="opacity" attributeType="XML" values="0.2; 1; .2" begin="0.15s" dur="0.6s" repeatCount="indefinite"></animate>
+        <animate attributeName="height" attributeType="XML" values="10; 20; 10" begin="0.15s" dur="0.6s" repeatCount="indefinite"></animate>
+        <animate attributeName="y" attributeType="XML" values="10; 5; 10" begin="0.15s" dur="0.6s" repeatCount="indefinite"></animate>
+    </rect>
+    <rect x="16" y="7.3584" width="4" height="15.2832" fill="inherit" opacity="0.2">
+        <animate attributeName="opacity" attributeType="XML" values="0.2; 1; .2" begin="0.3s" dur="0.6s" repeatCount="indefinite"></animate>
+        <animate attributeName="height" attributeType="XML" values="10; 20; 10" begin="0.3s" dur="0.6s" repeatCount="indefinite"></animate>
+        <animate attributeName="y" attributeType="XML" values="10; 5; 10" begin="0.3s" dur="0.6s" repeatCount="indefinite"></animate>
+    </rect>
 </symbol>
 </defs>
 </svg>

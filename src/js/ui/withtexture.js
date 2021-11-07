@@ -35,6 +35,7 @@ class TextureUI extends Submenu {
     this.datasource = datasource;
     this.textureAspect = textureAspect;
     this.subMenuElement = subMenuElement;
+    this.inited = false;
     this.actived = false;
     this.actions = {};
     this.fixMenus = [];
@@ -49,10 +50,24 @@ class TextureUI extends Submenu {
     this.leftMenuLine = this.subMenuElement.querySelector(leftMenuDivCss);
     this.trackItemElements = this.leftMenuLine.querySelectorAll(`.${this.cssPrefix}-track-item`);
     const mediaBodyCss = `.${this.cssPrefix}-media-layer.${this.name}`;
-    console.log('mediaBodyCss:', mediaBodyCss);
+    // console.log('mediaBodyCss:', mediaBodyCss);
     this.mediaBody = this.textureLayer.querySelector(mediaBodyCss);
-    console.log('mediaBody:', this.mediaBody);
+    // console.log('mediaBody:', this.mediaBody);
+    this.mediaLoading = this.mediaBody.querySelector(`.${this.cssPrefix}-media-loading`);
+
     this.adjustUI();
+  }
+
+  showLoading() {
+    if (this.mediaLoading) {
+      this.mediaLoading.style.display = 'block';
+    }
+  }
+
+  hideLoading() {
+    if (this.mediaLoading) {
+      this.mediaLoading.style.display = 'none';
+    }
   }
 
   addSubMenu(names) {
@@ -189,16 +204,19 @@ class TextureUI extends Submenu {
         break;
       }
     }
-    console.log('_onSubMenuClick cns:', cns);
+    // console.log('_onSubMenuClick cns:', cns);
   }
 
-  adjustItemSize(itemWidth) {
+  adjustItemSize(itemWidth, count) {
     let n;
     const rect = {};
     const width = this.textureLayer.clientWidth;
     n = width / itemWidth;
-    if (n > 4) {
-      n = 4;
+    if (!count) {
+      count = 4;
+    }
+    if (n > count) {
+      n = count;
       rect.width = Math.floor(width / n);
     } else {
       rect.width = itemWidth;

@@ -22,4 +22,11 @@ export default ({ locale, makeSvgIcon, cssPrefix }) => `
   tooltip-content="${locale.localize('apply')}">
       ${makeSvgIcon(['normal', 'active', 'hover', 'disabled'], 'check', false)}
   </li>
+  <li class="${cssPrefix}-vpartition ${cssPrefix}-item">
+      <div></div>
+  </li>
+  <li class="tie-btn-back ${cssPrefix}-item normal" 
+  tooltip-content="${locale.localize('goback')}">
+      ${makeSvgIcon(['normal', 'active', 'hover', 'disabled'], 'back', false)}
+  </li>
 `;

@@ -37,9 +37,27 @@ class Ui {
   constructor(element, options, actions) {
     this.options = this._initializeOption(options);
     this._actions = actions;
-    this._locale = new Locale(this.options.locale);
-    this.theme = new Theme(this.options.theme);
-
+    if (this.options.locale) {
+      if (this.options.locale instanceof Locale) {
+        this._locale = this.options.locale;
+        console.log('find Locale instance.');
+      } else {
+        this._locale = new Locale(this.options.locale);
+      }
+    } else {
+      this._locale = new Locale();
+    }
+    // this._locale = new Locale(this.options.locale);
+    if (this.options.theme) {
+      if (this.options.theme instanceof Theme) {
+        this.theme = this.options.theme;
+        console.log('find Theme instance.');
+      } else {
+        this.theme = new Theme(this.options.theme);
+      }
+    } else {
+      this.theme = new Theme();
+    }
     this.submenu = false;
     this.imageSize = {};
     this.uiSize = {};
@@ -98,7 +116,8 @@ class Ui {
         menu: [
           // 'selection',
           'make',
-          // 'imitate',
+          // 'centers',
+          'imitate',
           // 'amake',
           // 'storage',
         ],
@@ -295,8 +314,12 @@ class Ui {
     this.resultElement.style.display = 'none';
     const btnElement = this._mainMenuBarElement.querySelector('li.tie-btn-apply');
     const exportBtnElement = this._mainMenuBarElement.querySelector('li.tie-btn-export');
+    const backBtnElement = this._mainMenuBarElement.querySelector('li.tie-btn-back');
     const exportTemplate = this._exportTemplate.bind(this);
+    const backToMain = this._backToMain.bind(this);
     exportBtnElement.addEventListener('click', exportTemplate);
+    backBtnElement.addEventListener('click', backToMain);
+    this.backBtnElement = backBtnElement;
     const onExport = this._onExport.bind(this);
     btnElement.addEventListener('click', onExport);
     this.exportBtnElement = btnElement;
@@ -315,21 +338,37 @@ class Ui {
         }
       },
     });
+    this.datasource.on({
+      'template:active': () => {
+        this.showExport();
+      },
+    });
   }
 
   hideExport() {
-    // const allItems = this._mainMenuBarElement.querySelector(`li.${this.cssPrefix}-item`);
-    // allItems.forEach((item) => {
-    //   item.style.display = 'none';
-    // });
+    const allItems = this._mainMenuBarElement.querySelectorAll(`li.${cssPrefix}-item`);
+    allItems.forEach((item) => {
+      const cns = item.getAttribute('class').split(' ');
+      if (cns.indexOf('tie-btn-play') < 0) {
+        item.style.display = 'none';
+      }
+    });
     this.exportBtnElement.style.display = 'none';
-    this._mainMenuBarElement.style.display = 'none';
-    this.resultElement.style.display = 'none';
+    // this._mainMenuBarElement.style.display = 'none';
+    // this.resultElement.style.display = 'none';
+    this.backBtnElement.style.display = 'inline-block';
   }
 
   showExport() {
-    this.exportBtnElement.style.display = 'inline-block';
-    this._mainMenuBarElement.style.display = 'table-cell';
+    // this.exportBtnElement.style.display = 'inline-block';
+    // this._mainMenuBarElement.style.display = 'table-cell';
+    const allItems = this._mainMenuBarElement.querySelectorAll(`li.${cssPrefix}-item`);
+    allItems.forEach((item) => {
+      const cns = item.getAttribute('class').split(' ');
+      if (cns.indexOf('tie-btn-play') < 0) {
+        item.style.display = 'inline-block';
+      }
+    });
   }
 
   _deleteAll() {
@@ -346,6 +385,10 @@ class Ui {
   _exportTemplate() {
     this.timeLine.lock();
     this.datasource.fire('frame:template:export', {});
+  }
+
+  _backToMain() {
+    this.datasource.fire('go:back', {});
   }
 
   getEditorArea() {

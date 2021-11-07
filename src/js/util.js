@@ -522,3 +522,44 @@ export function isEmptyCropzone(cropRect) {
 
   return left === LEFT && top === TOP && width === WIDTH && height === HEIGHT;
 }
+
+export function roundValue(val) {
+  return Math.round(val * 100) / 100;
+}
+
+export function iterator(dataList, action, callback) {
+  const finalCall = (rs, idx) => {
+    if (callback && typeof callback.call === 'function') {
+      Promise.resolve().then(() => {
+        callback(rs, idx);
+      });
+    }
+  };
+  if (!dataList || dataList.length === 0) {
+    finalCall(true, -1);
+
+    return;
+  }
+  const toAction = (pos) => {
+    if (pos >= dataList.length) {
+      finalCall(true, pos);
+
+      return;
+    }
+    const item = dataList[pos];
+    if (action && typeof action.call === 'function') {
+      Promise.resolve().then(() => {
+        action(item, pos, (comeon) => {
+          if (comeon) {
+            toAction(pos + 1);
+          } else {
+            finalCall(pos === dataList.length - 1, pos);
+          }
+        });
+      });
+    } else {
+      finalCall(false, -2);
+    }
+  };
+  toAction(0);
+}

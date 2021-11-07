@@ -46,6 +46,7 @@ class Make extends TextureUI {
     });
     this.counter = 0;
     this.parsers = {};
+    this.__files = [];
     this.previewItemWidth = previewItemWidth;
     this.previewItemHeight = previewItemHeight;
     const options = {
@@ -68,9 +69,13 @@ class Make extends TextureUI {
     this.textTool = new TextControl(subMenuElement, options);
     this.subMenus = [];
     this.subMenus.push(this.transitions);
+    this.subMenus.push(this.animationControl);
+    this.subMenus.push(this.waveList);
+    this.subMenus.push(this.textTool);
     this._els = {
       mainLayer: this.mediaBody.querySelector(cls('.media-layer-main')),
     };
+    subMenuElement.makeInstance = this;
     // this.setup();
     this.addEvents();
     this.buildActions();
@@ -121,7 +126,7 @@ class Make extends TextureUI {
       this.iteratorLoad(cb);
     }
     const { name } = file;
-    console.log('onFileChanged file:', file);
+    // console.log('onFileChanged file:', file);
     const parser = this._getParserByName(name);
     if (parser) {
       info = 'File[] had imported!';
@@ -147,7 +152,7 @@ class Make extends TextureUI {
     if (!isSupportFileApi()) {
       alert('This browser does not support file-api');
     }
-    console.log('event.target.files:', event.target.files);
+    // console.log('event.target.files:', event.target.files);
     this.__files = [];
     for (let i = 0, n = event.target.files.length; i < n; i += 1) {
       this.__files.push(event.target.files[i]);
@@ -186,10 +191,12 @@ class Make extends TextureUI {
       this.counter += 1;
       const { snapshot, snapshotWidth, snapshotHeight, srcFileName } = parser;
       const elem = this._appendItem(snapshot, snapshotWidth, snapshotHeight, srcFileName);
+      parser._elemId = elem;
       this.parsers[elem] = parser;
     }
     this.iteratorLoad(() => {
-      console.log('_onVideoLoaded is last file.');
+      // console.log('_onVideoLoaded is last file.');
+      this.datasource.fire('source:loaded', { parser });
     });
   }
 
@@ -198,16 +205,77 @@ class Make extends TextureUI {
       this.counter += 1;
       const { snapshot, snapshotWidth, snapshotHeight, srcFileName } = parser;
       const elem = this._appendItem(snapshot, snapshotWidth, snapshotHeight, srcFileName);
+      parser._elemId = elem;
       this.parsers[elem] = parser;
     }
     this.iteratorLoad(() => {
-      console.log('_onImageLoaded is last file.');
+      // console.log('_onImageLoaded is last file.');
+      this.datasource.fire('source:loaded', { parser });
+    });
+  }
+
+  tryPlay() {
+    this.datasource.fire('try:play', {
+      callback: () => {
+        this.removeSubMenu(['pause']);
+        this.addSubMenu(['play']);
+      },
+      syncTime: true,
+    });
+    this.removeSubMenu(['play']);
+    this.addSubMenu(['pause']);
+  }
+
+  pausePlay() {
+    this.datasource.fire('try:play:pause', {});
+    this.removeSubMenu(['pause']);
+    this.addSubMenu(['play']);
+  }
+
+  setupParser({ parser, sourceSection }) {
+    const quality = 20;
+    const vW = parser.metadata.width;
+    const vH = parser.metadata.height;
+    const outWidth = this.previewItemWidth;
+    const outHeight = Math.floor((outWidth * vH) / vW);
+    const onProgress = this._onProgress.bind(this);
+    const elemId = parser._elemId;
+    parser.parseKeyFrameImages(outWidth, outHeight, quality, onProgress).then((result) => {
+      if (result) {
+        console.log('parseKeyFrameImages result:', result);
+        const duration = parser.total_seconds;
+        const { srcFileName, fileType } = parser;
+        onProgress('加入队列', 0.1, '-');
+        parser.setup().then((section) => {
+          this.ui.addVideoFrames(
+            duration,
+            result,
+            {
+              name: srcFileName,
+              duration,
+              elemId,
+              fileType,
+              section,
+              width: outWidth,
+              height: outHeight,
+            },
+            () => {
+              if (sourceSection && sourceSection.uid) {
+                section.uid = sourceSection.uid;
+              }
+              this.datasource.fire(`${parser.mime}:setup`, { parser, section });
+              onProgress('加入队列', 1, '-');
+            }
+          );
+        });
+      }
     });
   }
 
   _onAddBtnClick(event) {
-    let outWidth, outHeight, dataset;
-    const onProgress = this._onProgress.bind(this);
+    // let outWidth, outHeight, dataset;
+    let dataset;
+    // const onProgress = this._onProgress.bind(this);
     const { tagName } = event.target;
     if (tagName === 'use') {
       dataset = event.target.parentNode.dataset;
@@ -219,6 +287,8 @@ class Make extends TextureUI {
     const elemId = dataset.id;
     const parser = this.parsers[elemId];
     if (parser) {
+      this.setupParser({ parser });
+      /*
       const quality = 20;
       const vW = parser.metadata.width;
       const vH = parser.metadata.height;
@@ -251,6 +321,7 @@ class Make extends TextureUI {
           });
         }
       });
+      */
     } else {
       console.log('can not find parser:', elemId);
     }
@@ -306,12 +377,12 @@ class Make extends TextureUI {
     return layerItem.id;
   }
 
-  _onItemScaled({ range, context }) {
+  _onItemScaled({ range, context, callback }) {
     const { elemId, section } = context;
     console.log('make js elemId:', elemId);
     const parser = this.parsers[elemId];
     if (parser && parser.section) {
-      this.datasource.fire('track:item:scale', { section, range });
+      this.datasource.fire('track:item:scale', { section, range, callback });
     }
   }
 
@@ -396,6 +467,12 @@ class Make extends TextureUI {
         this.changeStandbyMode();
         this.animationControl.changeStartMode();
       },
+      play: () => {
+        this.tryPlay();
+      },
+      pause: () => {
+        this.pausePlay();
+      },
     };
   }
 
@@ -427,6 +504,7 @@ class Make extends TextureUI {
 
   activeMenu({ item, isLast }) {
     const menuNames = ['music'];
+    this.pausePlay();
     if (item.name === 'item') {
       menuNames.push('delete');
       menuNames.push('text');

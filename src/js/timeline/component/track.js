@@ -117,6 +117,19 @@ class Track extends Component {
     return null;
   }
 
+  getItemByUid(uid) {
+    for (let i = 0, n = this.groups.length; i < n; i += 1) {
+      const g = this.groups[i];
+      const { context } = g;
+      if (context.section && context.section.uid === uid) {
+        return g;
+      }
+    }
+    console.log('not find uid:', uid, ',groups:', this.groups);
+
+    return null;
+  }
+
   addTransition(trackItem, start, duration, space, context) {
     const total = this.totalDuration();
     start = start + total;
@@ -302,8 +315,16 @@ class Track extends Component {
 
   clearAll() {
     const gs = [];
+    const ts = [];
     this.groups.forEach((g) => {
-      gs.push(g);
+      if (this.isTransition(g)) {
+        ts.push(g);
+      } else {
+        gs.push(g);
+      }
+    });
+    ts.forEach((g) => {
+      g.dispose();
     });
     gs.forEach((g) => {
       g.dispose();

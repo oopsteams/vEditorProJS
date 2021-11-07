@@ -113,7 +113,7 @@ export default ({
     .${cssPrefix}-main-menu use.normal.use-default,
     .${cssPrefix}-help-menu use.normal.use-default {
         fill-rule: evenodd;
-        fill: "transparent";
+        fill: ${menuIconStyle.normal.color};
         stroke: ${menuIconStyle.normal.color};
     }
     .${cssPrefix}-track-menu use.active.use-default,

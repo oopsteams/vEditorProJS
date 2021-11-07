@@ -1,5 +1,6 @@
 import snippet from 'tui-code-snippet';
 import fabric from 'fabric';
+import { roundValue } from '@/util';
 // import Transition from '../component/Transition';
 const { CustomEvents, extend } = snippet;
 
@@ -61,10 +62,76 @@ class TrackItem {
   }
 
   filterFrameViews() {
-    let lastFile;
-    const count = this.files.length;
+    // let lastFile;
+    let i, cnt, midStart, remain, commonIndex, diff;
+    const total = this.files.length;
+    const { section } = this.context;
+    console.log('trackitem filter frame section:', section);
+    commonIndex = 0;
+    if (section && section.commonIndex) {
+      commonIndex = section.commonIndex;
+      console.log('trackitem filter frame section commonIndex:', section.commonIndex);
+    }
     const [startAt, endAt] = this.timeRange;
-    console.log('filterFrameViews timeRange:', startAt, ',', endAt);
+    console.log('filterFrameViews timeRange:', startAt, ',', endAt, ',commonIndex:', commonIndex);
+    remain = startAt % 1;
+    const startN = startAt - remain;
+    cnt = startN;
+    for (i = 0; i < cnt; i += 1) {
+      const file = this.files[i];
+      file.exclude = true;
+    }
+    diff = 1;
+    if (remain > 0) {
+      if (endAt - i <= 1) {
+        diff = endAt - i;
+      }
+      const file = this.files[i];
+      file.exclude = false;
+      file.w = (diff - remain) * this.space;
+      midStart = cnt + 1;
+      console.log(`[${commonIndex}]file[${i}] include, w:`, file.w);
+    } else if (endAt - cnt < 1) {
+      remain = endAt - cnt;
+      if (remain > 0) {
+        const file = this.files[i];
+        file.exclude = false;
+        file.w = remain * this.space;
+        console.log(`[${commonIndex}]file[${i}] include, w:`, file.w);
+      }
+      midStart = cnt + 1;
+    } else {
+      midStart = cnt;
+    }
+    for (i = midStart; i < endAt - 1; i += 1) {
+      const file = this.files[i];
+      file.exclude = false;
+      file.w = this.space;
+      console.log(`[${commonIndex}]file[${i}] include, w:`, file.w, ',full');
+    }
+    if (i < endAt) {
+      remain = endAt - i;
+      if (remain <= 1 && remain > 0) {
+        if (i < total) {
+          const file = this.files[i];
+          file.exclude = false;
+          file.w = remain * this.space;
+          console.log(`[${commonIndex}]file[${i}] include, w:`, file.w, ',may full');
+        }
+        midStart = i + 1;
+      } else {
+        midStart = i;
+      }
+    } else {
+      midStart = i;
+    }
+    cnt = total;
+    for (i = midStart; i < cnt; i += 1) {
+      const file = this.files[i];
+      file.exclude = true;
+      file.w = this.space;
+    }
+    /*
     for (let i = 0; i < count; i += 1) {
       const file = this.files[i];
       file.exclude = false;
@@ -86,6 +153,7 @@ class TrackItem {
       }
       lastFile = file;
     }
+    */
   }
 
   setup() {
@@ -191,7 +259,7 @@ class TrackItem {
     // imageOption.scaleX = file.w / imageOption.width;
     if (imgCount > subIndex) {
       imageOption.scaleX = file.w / imageOption.width;
-      console.log('subIndex:', subIndex, ',scaleX:', imageOption.scaleX);
+      // console.log('subIndex:', subIndex, ',scaleX:', imageOption.scaleX);
       if (subIndex > 0) {
         imageOption.left = this.frameViews[subIndex - 1].rw + this.frameViews[subIndex - 1].left;
       }
@@ -360,6 +428,27 @@ class TrackItem {
     }
   }
 
+  updateTimeRange(tRange, callback) {
+    this.timeRange[0] = tRange[0];
+    this.timeRange[1] = tRange[1];
+    this.getCanvas().remove(this.itemPanel);
+    this.filterFrameViews();
+
+    this.updateFrames().then(() => {
+      // const currentProgress = this.getTimeline().getCurrentProgress();
+      this._make().then(() => {
+        this.track.active(this);
+        this.track.scaleAfter(this);
+        this.track.timeline.fire('track:item:scale', {
+          range: this.timeRange,
+          context: this.context,
+          callback,
+        });
+        this.syncItemOffset();
+      });
+    });
+  }
+
   updateSize({ left, right }) {
     let newT, delta;
     // console.log('updateSize left:', left, ',right:', right);
@@ -368,7 +457,8 @@ class TrackItem {
 
     const reBuild = () => {
       // console.log('new timeRange:', this.timeRange);
-
+      this.updateTimeRange(this.timeRange);
+      /*
       this.getCanvas().remove(this.itemPanel);
       this.filterFrameViews();
 
@@ -384,6 +474,7 @@ class TrackItem {
           this.syncItemOffset();
         });
       });
+      */
     };
     if (t < 0.2) {
       this.timeRange[1] = this.timeRange[0] + 0.2;
@@ -392,7 +483,7 @@ class TrackItem {
       return;
     }
     if (left === 1) {
-      newT = t * right;
+      newT = roundValue(t * right);
       if (newT + this.timeRange[0] > duration) {
         delta = newT + this.timeRange[0] - duration;
         if (this.isImage && delta >= 0.05) {
@@ -406,9 +497,8 @@ class TrackItem {
 
           return;
         }
-        newT = this.timeRange[1] - this.timeRange[0];
+        newT = roundValue(this.timeRange[1] - this.timeRange[0]);
       }
-      // 如果是图片可以超出原有duration，此时需要更新panel ticks
       this.timeRange[1] = this.timeRange[0] + newT;
       reBuild();
     } else {
@@ -421,7 +511,7 @@ class TrackItem {
         }
         this.timeRange[0] = 0;
       } else {
-        this.timeRange[0] = timeDiff;
+        this.timeRange[0] = roundValue(timeDiff);
         //
       }
       reBuild();

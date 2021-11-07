@@ -163,18 +163,17 @@ class TextControl extends TextureUI {
 
     return false;
   }
-
-  _onTextLoaded({ data }) {
-    if (data) {
-      data.forEach((tran) => {
-        if (!this.existTextData(tran)) {
-          const elem = this._appendItem('#', 120, 60, tran.label);
-          console.log('_onTextLoaded elem:', elem);
-          this.items[elem] = tran;
-        }
-      });
-    }
-  }
+  // _onTextLoaded({ data }) {
+  //   if (data) {
+  //     data.forEach((tran) => {
+  //       if (!this.existTextData(tran)) {
+  //         const elem = this._appendItem('#', 120, 60, tran.label);
+  //         console.log('_onTextLoaded elem:', elem);
+  //         this.items[elem] = tran;
+  //       }
+  //     });
+  //   }
+  // }
 
   syncSections() {
     let html = '',
@@ -392,6 +391,32 @@ class TextControl extends TextureUI {
     console.log('_changeColorHandler color:', color);
   }
 
+  addSection(section) {
+    const oriSection = this.activedItem.context.section;
+    this.activedItem.sections.push(section);
+    console.log('will call add text:', section);
+    this.datasource.fire(`text:add`, { source: oriSection, section });
+  }
+
+  setupText(section, callback) {
+    this.ui.timeLine.addText(
+      section.dur,
+      {
+        duration: section.dur,
+        section,
+      },
+      (textItem) => {
+        if (textItem) {
+          this.activedItem = textItem;
+          // this.activedItem.textTrack.active(this.activedItem);
+        }
+        this.datasource.fire(`text:setup`, { section, callback });
+        // onProgress('加入队列', 1, '-');
+        // parser.selected = true;
+      }
+    );
+  }
+
   _onApplyButtonClick() {
     const startAt = this.trackItem.start;
     const dur = this.trackItem.getDuration();
@@ -419,8 +444,10 @@ class TextControl extends TextureUI {
         console.log('will call add text:', section);
         this.syncSections();
         this.datasource.fire(`text:add`, { source: oriSection, section });
+        // this.addSection(section);
       }
     } else {
+      /*
       this.ui.timeLine.addText(
         section.dur,
         {
@@ -437,6 +464,8 @@ class TextControl extends TextureUI {
           // parser.selected = true;
         }
       );
+      */
+      this.setupText(section);
     }
     // this.syncSections();
   }

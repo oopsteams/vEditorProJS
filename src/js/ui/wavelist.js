@@ -43,6 +43,7 @@ class WaveList extends TextureUI {
     this._els = {
       mainLayer: this.mediaBody.querySelector(cls('.media-layer-main')),
     };
+    this.__files = [];
     this.buildActions();
     // this.setup();
     this.addDatasourceEvents();
@@ -126,6 +127,41 @@ class WaveList extends TextureUI {
     return false;
   }
 
+  setupWave(parser, elemId) {
+    const onProgress = this._onProgress.bind(this);
+    if (!elemId) {
+      const keys = Object.keys(this.items);
+      for (let i = 0, n = keys.length; i < n; i += 1) {
+        if (this.items[keys[i]] === parser) {
+          elemId = keys[i];
+          break;
+        }
+      }
+    }
+    if (parser && !parser.selected) {
+      const duration = parser.total_seconds;
+      const { srcFileName, fileType } = parser;
+      parser.setup(onProgress).then((section) => {
+        this.ui.timeLine.addWave(
+          section.dur,
+          [{ url: section.file.data }],
+          {
+            name: srcFileName,
+            duration,
+            elemId,
+            fileType,
+            section,
+          },
+          () => {
+            this.datasource.fire(`audio:setup`, { parser, section });
+            onProgress('加入队列', 1, '-');
+            parser.selected = true;
+          }
+        );
+      });
+    }
+  }
+
   _onAddBtnClick(event) {
     let dataset;
     const { tagName } = event.target;
@@ -146,8 +182,10 @@ class WaveList extends TextureUI {
     this.activeElement(elemId);
     const parser = this.items[elemId];
     console.log('wavelist _onAddBtnClick parser:', parser);
-    const onProgress = this._onProgress.bind(this);
+    // const onProgress = this._onProgress.bind(this);
     if (parser && !parser.selected) {
+      this.setupWave(parser, elemId);
+      /*
       const duration = parser.total_seconds;
       const { srcFileName, fileType } = parser;
       parser.setup(onProgress).then((section) => {
@@ -169,6 +207,7 @@ class WaveList extends TextureUI {
         );
         console.log('audio parser section:', section);
       });
+      */
     } else {
       this.getUI().timeLine.fire('track:wave:focus', { elemId });
     }
@@ -399,7 +438,7 @@ class WaveList extends TextureUI {
     });
   }
 
-  _onAudioLoaded({ parser }) {
+  _onAudioLoaded({ parser, callback }) {
     if (parser) {
       this.counter += 1;
       const { previewUrl, srcFileName } = parser;
@@ -409,6 +448,9 @@ class WaveList extends TextureUI {
     }
     this.iteratorLoad(() => {
       console.log('_onVideoLoaded is last file.');
+      if (callback) {
+        callback();
+      }
     });
   }
 

@@ -231,7 +231,11 @@ class TimeLine {
   }
 
   addText(dur, context, cb) {
-    const start = this.getCurrentTime();
+    let start = this.getCurrentTime();
+    const { section } = context;
+    if (section.startAt) {
+      start = section.startAt;
+    }
     this.texttrack.addText(start, dur, this.previewItemWidth, context).then((textItem) => {
       if (cb) {
         cb(textItem);

@@ -43,6 +43,7 @@ class Transitions extends TextureUI {
     this._els = {
       mainLayer: this.mediaBody.querySelector(cls('.media-layer-main')),
     };
+    this.initCallback = null;
     this.buildActions();
     // this.setup();
     this.addDatasourceEvents();
@@ -130,8 +131,13 @@ class Transitions extends TextureUI {
 
   _changeStartMode() {
     this.disableSubmenus(['back']);
-    this.datasource.fire('transitions:load', {});
+    this.initDatas();
     this.showMainLayer();
+  }
+
+  initDatas(callback) {
+    this.initCallback = callback;
+    this.datasource.fire('transitions:load', {});
   }
 
   existTransitionData(dataItem) {
@@ -150,6 +156,7 @@ class Transitions extends TextureUI {
 
   _onTransitionsLoaded({ data }) {
     if (data) {
+      this.inited = true;
       data.forEach((tran) => {
         if (!this.existTransitionData(tran)) {
           const elem = this._appendItem('#', minItemWidth, minItemWidth / 2, tran.label);
@@ -157,6 +164,9 @@ class Transitions extends TextureUI {
           this.items[elem] = tran;
         }
       });
+      if (this.initCallback) {
+        this.initCallback();
+      }
     }
   }
 
@@ -169,6 +179,33 @@ class Transitions extends TextureUI {
     }
 
     return rs;
+  }
+
+  getTransitionSectionByMode(mode) {
+    const keys = Object.keys(this.items);
+    for (let i = 0, n = keys.length; i < n; i += 1) {
+      const elemId = keys[i];
+      const transitionItem = this.items[elemId];
+      if (transitionItem.mode === mode) {
+        transitionItem.elemId = elemId;
+
+        return this.copyDict(transitionItem);
+      }
+    }
+
+    return null;
+  }
+
+  setupTransition(trackItem, transition, callback) {
+    transition.trackItem = trackItem;
+    this.ui.addTransition(trackItem, transition.dur, transition, () => {
+      const section = this.parent.getSectionByItem(trackItem);
+      this.datasource.fire('track:transition:add', {
+        transition,
+        section,
+        callback,
+      });
+    });
   }
 
   _onAddBtnClick(event) {
@@ -187,6 +224,8 @@ class Transitions extends TextureUI {
     transitionItem.trackItem = this.trackItem;
     this.activeElement(elemId);
     const transition = this.copyDict(transitionItem);
+    this.setupTransition(this.trackItem, transition, null);
+    /*
     this.ui.addTransition(this.trackItem, transitionItem.dur, transition, () => {
       const section = this.parent.getSectionByItem(transitionItem.trackItem);
       this.datasource.fire('track:transition:add', {
@@ -194,6 +233,7 @@ class Transitions extends TextureUI {
         section,
       });
     });
+    */
   }
 
   activeElement(elemId) {

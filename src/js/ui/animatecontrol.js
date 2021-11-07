@@ -43,6 +43,7 @@ class AnimationControl extends TextureUI {
     this._els = {
       mainLayer: this.mediaBody.querySelector(cls('.media-layer-main')),
     };
+    this.initCallback = null;
     this.buildActions();
     // this.setup();
     this.addDatasourceEvents();
@@ -51,18 +52,27 @@ class AnimationControl extends TextureUI {
 
   _changeStartMode() {
     this.disableSubmenus(['back']);
-    this.datasource.fire('animations:load', {});
+    this.initDatas();
     this.showMainLayer();
+  }
+
+  initDatas(callback) {
+    this.initCallback = callback;
+    this.datasource.fire('animations:load', {});
   }
 
   _onAnimationsLoaded({ data }) {
     if (data) {
+      this.inited = true;
       data.forEach((animate) => {
         if (!this.existAnimationData(animate)) {
           const elem = this._appendItem('#', minItemWidth, minItemWidth / 2, animate.label);
           this.items[elem] = animate;
         }
       });
+      if (this.initCallback) {
+        this.initCallback();
+      }
     }
   }
 
@@ -182,6 +192,43 @@ class AnimationControl extends TextureUI {
     return rs;
   }
 
+  getAnimationSectionByMode(mode) {
+    const keys = Object.keys(this.items);
+    for (let i = 0, n = keys.length; i < n; i += 1) {
+      const elemId = keys[i];
+      const animationItem = this.items[elemId];
+      if (animationItem.mode === mode) {
+        animationItem.elemId = elemId;
+
+        return animationItem;
+      }
+    }
+
+    return null;
+  }
+
+  setupAnimation(trackItem, animationItem, callback) {
+    animationItem.trackItem = trackItem;
+    const dur = trackItem.getDuration();
+    const section = this.parent.getSectionByItem(trackItem);
+    this.ui.timeLine.addAnimation(
+      {
+        duration: dur,
+        section,
+        elemId: animationItem.elemId,
+        trackItem,
+        text: animationItem.label,
+      },
+      () => {
+        this.datasource.fire('track:animation:add', {
+          animation: this.copyDict(animationItem),
+          section,
+          callback,
+        });
+      }
+    );
+  }
+
   _onAddBtnClick(event) {
     let dataset;
     const { tagName } = event.target;
@@ -222,6 +269,7 @@ class AnimationControl extends TextureUI {
         section,
         elemId,
         trackItem,
+        mode: animationItem.mode,
         text: animationItem.label,
       },
       () => {

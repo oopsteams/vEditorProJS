@@ -57,6 +57,10 @@
 .{prefix}-layer-main-mid.animation
     .{prefix}-media-layer.animation
         display: flex;
+
+.{prefix}-layer-main-mid.templateInstance
+    .{prefix}-media-layer.templateInstance
+        display: flex;
   
 
 .{prefix}-media-layer-main
@@ -105,3 +109,12 @@
           flex-direction: column;
           align-items: center;
           vertical-align: middle;
+
+.{prefix}-media-layer-top
+    display: flex;
+    align-items: center;
+    svg > use.active
+        display: block;
+.{prefix}-media-loading
+    svg
+      width: 60px;

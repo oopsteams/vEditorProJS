@@ -1,5 +1,6 @@
 import snippet from 'tui-code-snippet';
 import fabric from 'fabric';
+import { roundValue } from '@/util';
 const { CustomEvents } = snippet;
 
 class TextItem {
@@ -263,7 +264,7 @@ class TextItem {
       return;
     }
     if (left === 1) {
-      newT = t * right;
+      newT = roundValue(t * right);
       if (newT + this.timeRange[0] > duration) {
         delta = newT + this.timeRange[0] - duration;
         if (delta >= 0.05) {
@@ -275,7 +276,7 @@ class TextItem {
 
           return;
         }
-        newT = duration - this.timeRange[0];
+        newT = roundValue(duration - this.timeRange[0]);
       }
       this.timeRange[1] = this.timeRange[0] + newT;
       reBuild();
@@ -287,7 +288,7 @@ class TextItem {
         }
         this.timeRange[0] = 0;
       } else {
-        this.timeRange[0] = timeDiff;
+        this.timeRange[0] = roundValue(timeDiff);
       }
       reBuild();
     }

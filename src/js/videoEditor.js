@@ -1,6 +1,8 @@
 import snippet from 'tui-code-snippet';
 import Invoker from '@/invoker';
 import UI from '@/ui';
+import Theme from '@/ui/theme/theme';
+import Locale from '@/ui/locale/locale';
 import action from '@/action';
 import commandFactory from '@/factory/command';
 import Graphics from '@/graphics';
@@ -691,5 +693,7 @@ class VideoEditor {
 
 action.mixin(VideoEditor);
 CustomEvents.mixin(VideoEditor);
+VideoEditor.Theme = Theme;
+VideoEditor.Locale = Locale;
 
 export default VideoEditor;
