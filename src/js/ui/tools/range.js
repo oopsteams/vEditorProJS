@@ -1,8 +1,9 @@
 import snippet from 'tui-code-snippet';
 import { toInteger, clamp } from '@/util';
 import { keyCodes } from '@/consts';
+import InputProxy from './inputproxy';
 
-const INPUT_FILTER_REGEXP = /(-?)([0-9]*)[^0-9]*([0-9]*)/g;
+const INPUT_FILTER_REGEXP = /(-?)([0-9]*)[^0-9\\.]*([0-9]*|\\.[0-9]+)/g;
 
 /**
  * Range control class
@@ -33,11 +34,13 @@ class Range {
     this._drawRangeElement();
 
     this.rangeWidth = this._getRangeWidth();
+    // console.log('Range constructor rangeWidth:', this.rangeWidth);
     this._min = options.min || 0;
     this._max = options.max || 100;
     this._useDecimal = options.useDecimal;
     this._absMax = this._min * -1 + this._max;
     this.realTimeEvent = options.realTimeEvent || false;
+    this.skipListener = options.skipListener || false;
 
     this.eventHandler = {
       startChangingSlide: this._startChangingSlide.bind(this),
@@ -45,10 +48,12 @@ class Range {
       changeSlide: this._changeSlide.bind(this),
       changeSlideFinally: this._changeSlideFinally.bind(this),
       changeInput: this._changeValueWithInput.bind(this, false),
-      changeInputFinally: this._changeValueWithInput.bind(this, true),
+      // changeInputFinally: this._changeValueWithInput.bind(this, true),
       changeInputWithArrow: this._changeValueWithInputKeyEvent.bind(this),
     };
-
+    this.inputProxy = new InputProxy(this.rangeInputElement);
+    this.inputProxy.stopListener();
+    this.inputProxy.on('change', this._changeValueWithProxy.bind(this));
     this._addClickEvent();
     this._addDragEvent();
     this._addInputEvent();
@@ -69,6 +74,29 @@ class Range {
     });
   }
 
+  disable() {
+    this._removeClickEvent();
+    this._removeDragEvent();
+    this._removeInputEvent();
+    this.rangeInputElement.readonly = true;
+  }
+
+  enable() {
+    this._addClickEvent();
+    this._addDragEvent();
+    this._addInputEvent();
+    this.rangeInputElement.readonly = false;
+  }
+
+  resize() {
+    const _rangeWidth = this._getRangeWidth();
+    if (this.rangeWidth !== _rangeWidth) {
+      // console.log('Range resize rangeWidth:', this.rangeWidth, ',', _rangeWidth);
+      this.rangeWidth = _rangeWidth;
+      this.trigger('change');
+    }
+  }
+
   /**
    * Set range max value and re position cursor
    * @param {number} maxValue - max value
@@ -81,6 +109,19 @@ class Range {
 
   get max() {
     return this._max;
+  }
+
+  set min(minValue) {
+    this._min = minValue;
+    this._absMax = this._min * -1 + this._max;
+    if (this._value < this._min) {
+      this.value = this._min;
+    }
+    this.trigger('change');
+  }
+
+  get min() {
+    return this._min;
   }
 
   /**
@@ -119,7 +160,11 @@ class Range {
    * @param {string} type - type
    */
   trigger(type) {
-    this.fire(type, this._value);
+    if (type === 'change') {
+      this.fire(type, this._value, false, this);
+    } else {
+      this.fire(type, this._value);
+    }
   }
 
   /**
@@ -128,8 +173,12 @@ class Range {
    */
   _getRangeWidth() {
     const getElementWidth = (element) => toInteger(window.getComputedStyle(element, null).width);
+    const rangeWidth = getElementWidth(this.rangeElement);
+    const pointerWidth = getElementWidth(this.pointer);
+    // console.log('_getRangeWidth rangeWidth clientWidth:', this.rangeElement.clientWidth);
+    // console.log('_getRangeWidth rangeWidth:', rangeWidth, ',pointerWidth:', pointerWidth);
 
-    return getElementWidth(this.rangeElement) - getElementWidth(this.pointer);
+    return rangeWidth - pointerWidth;
   }
 
   /**
@@ -160,8 +209,13 @@ class Range {
   _addInputEvent() {
     if (this.rangeInputElement) {
       this.rangeInputElement.addEventListener('keydown', this.eventHandler.changeInputWithArrow);
-      this.rangeInputElement.addEventListener('keyup', this.eventHandler.changeInput);
-      this.rangeInputElement.addEventListener('blur', this.eventHandler.changeInputFinally);
+      // this.rangeInputElement.addEventListener('keyup', this.eventHandler.changeInput);
+      // this.rangeInputElement.addEventListener('blur', this.eventHandler.changeInputFinally);
+      if (!this.skipListener) {
+        this.inputProxy.startListener();
+      } else {
+        this.rangeInputElement.addEventListener('blur', this.eventHandler.changeInput);
+      }
     }
   }
 
@@ -171,9 +225,13 @@ class Range {
    */
   _removeInputEvent() {
     if (this.rangeInputElement) {
+      this.inputProxy.stopListener();
       this.rangeInputElement.removeEventListener('keydown', this.eventHandler.changeInputWithArrow);
-      this.rangeInputElement.removeEventListener('keyup', this.eventHandler.changeInput);
-      this.rangeInputElement.removeEventListener('blur', this.eventHandler.changeInputFinally);
+      // this.rangeInputElement.removeEventListener('keyup', this.eventHandler.changeInput);
+      // this.rangeInputElement.removeEventListener('blur', this.eventHandler.changeInputFinally);
+      if (this.skipListener) {
+        this.rangeInputElement.removeEventListener('blur', this.eventHandler.changeInput);
+      }
     }
   }
 
@@ -198,7 +256,7 @@ class Range {
     if (!unChanged) {
       const clampValue = clamp(value, this._min, this.max);
       this.value = clampValue;
-      this.fire('change', clampValue, false);
+      // this.fire('change', clampValue, false);
     }
   }
 
@@ -223,11 +281,11 @@ class Range {
 
   /**
    * change angle event
-   * @param {boolean} isLast - Is last change
+   * @param {boolean} _isLast - Is last change
    * @param {object} event - key event
    * @private
    */
-  _changeValueWithInput(isLast, event) {
+  _changeValueWithInput(_isLast, event) {
     const { keyCode, target } = event;
 
     if ([keyCodes.ARROW_UP, keyCodes.ARROW_DOWN].indexOf(keyCode) >= 0) {
@@ -237,13 +295,28 @@ class Range {
     const stringValue = this._filterForInputText(target.value);
     const waitForChange = !stringValue || isNaN(stringValue);
     target.value = stringValue;
-
+    // console.log('_changeValueWithInput stringValue:', stringValue);
     if (!waitForChange) {
       let value = this._useDecimal ? Number(stringValue) : toInteger(stringValue);
       value = clamp(value, this._min, this.max);
 
       this.value = value;
-      this.fire('change', value, isLast);
+      // this.fire('change', value, isLast);
+    }
+  }
+
+  _changeValueWithProxy(event) {
+    const { target } = event;
+    const stringValue = this._filterForInputText(target.value);
+    const waitForChange = !stringValue || isNaN(stringValue);
+
+    if (!waitForChange) {
+      let value = this._useDecimal ? Number(stringValue) : toInteger(stringValue);
+      // console.log('value:', value, ',stringValue:', stringValue, this._useDecimal);
+      value = clamp(value, this._min, this.max);
+      // console.log('clamp rs:', value, ',_min:', this._min, ',max:', this.max);
+      this.value = value;
+      this.fire('change', value, true, this);
     }
   }
 
@@ -302,7 +375,7 @@ class Range {
     if (isValueChanged) {
       this.value = value;
       if (this.realTimeEvent) {
-        this.fire('change', this._value, false);
+        this.fire('change', this._value, false, this);
       }
     }
   }
@@ -319,7 +392,7 @@ class Range {
     this.subbar.style.right = `${(1 - ratio) * this.rangeWidth}px`;
     this.value = value;
 
-    this.fire('change', value, true);
+    this.fire('change', value, true, this);
   }
 
   _startChangingSlide(event) {
@@ -335,7 +408,7 @@ class Range {
    * @private
    */
   _stopChangingSlide() {
-    this.fire('change', this._value, true);
+    this.fire('change', this._value, true, this);
 
     document.removeEventListener('mousemove', this.eventHandler.changeSlide);
     document.removeEventListener('mouseup', this.eventHandler.stopChangingSlide);

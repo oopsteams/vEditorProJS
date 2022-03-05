@@ -314,6 +314,7 @@ class Track extends Component {
   }
 
   clearAll() {
+    console.log('main track clearAll in....');
     const gs = [];
     const ts = [];
     this.groups.forEach((g) => {

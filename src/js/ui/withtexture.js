@@ -70,6 +70,11 @@ class TextureUI extends Submenu {
     }
   }
 
+  clearSubMenu() {
+    this.fixMenus = [];
+    this.disableSubmenus([]);
+  }
+
   addSubMenu(names) {
     names.forEach((name) => {
       const idx = this.fixMenus.indexOf(name);

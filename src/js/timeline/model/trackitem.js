@@ -52,7 +52,7 @@ class TrackItem {
       lockScalingX: true,
       lockScalingY: true,
       hasControls: false,
-      selectable: false,
+      selectable: true,
       hoverCursor: 'default',
     });
     // selectable: false,
@@ -198,6 +198,7 @@ class TrackItem {
     this.labels = [];
     const { start, files, space } = this;
     const end = this.start + this.getDuration();
+
     return new Promise((resolve) => {
       this._loopNewImage({ i: start, start, end, files, space }, () => {
         resolve();
@@ -343,6 +344,7 @@ class TrackItem {
           fImage.time = i;
           fImage.rw = file.w;
           fImage.exclude = file.exclude;
+          console.log('trackItem => Image.fromURL fImage:', fImage);
           this.frameViews.push(fImage);
           this._loopNewImage({ i: i + 1, start, end, files, space }, callback);
         },
@@ -369,6 +371,7 @@ class TrackItem {
     this.xyRange[0] = this.itemPanel.left;
     this.xyRange[1] = this.itemPanel.left + this.itemPanel.width;
     this.itemPanel.setCoords();
+    // this.fire('track:item:start:changed', { time });
   }
 
   syncItemOffset() {
@@ -418,7 +421,7 @@ class TrackItem {
       this.itemPanel.left = newX;
       this.xyRange[0] = this.itemPanel.left;
       this.xyRange[1] = this.itemPanel.left + this.itemPanel.width;
-      this.itemPanel.setCoords();
+
       this.track.timeline.fire('track:item:sorted', {
         start: this.start,
         range: this.timeRange,
@@ -426,6 +429,7 @@ class TrackItem {
       });
       this.getTimeline().updateActiveObj(this.itemPanel);
     }
+    this.itemPanel.setCoords();
   }
 
   updateTimeRange(tRange, callback) {
@@ -449,6 +453,10 @@ class TrackItem {
     });
   }
 
+  permitScaleOut() {
+    return this.context.fileType === 'none' || this.isImage;
+  }
+
   updateSize({ left, right }) {
     let newT, delta;
     // console.log('updateSize left:', left, ',right:', right);
@@ -458,26 +466,9 @@ class TrackItem {
     const reBuild = () => {
       // console.log('new timeRange:', this.timeRange);
       this.updateTimeRange(this.timeRange);
-      /*
-      this.getCanvas().remove(this.itemPanel);
-      this.filterFrameViews();
-
-      this.updateFrames().then(() => {
-        // const currentProgress = this.getTimeline().getCurrentProgress();
-        this._make().then(() => {
-          this.track.active(this);
-          this.track.scaleAfter(this);
-          this.track.timeline.fire('track:item:scale', {
-            range: this.timeRange,
-            context: this.context,
-          });
-          this.syncItemOffset();
-        });
-      });
-      */
     };
-    if (t < 0.2) {
-      this.timeRange[1] = this.timeRange[0] + 0.2;
+    if (t < 0.1) {
+      this.timeRange[1] = this.timeRange[0] + 0.1;
       reBuild();
 
       return;
@@ -486,7 +477,7 @@ class TrackItem {
       newT = roundValue(t * right);
       if (newT + this.timeRange[0] > duration) {
         delta = newT + this.timeRange[0] - duration;
-        if (this.isImage && delta >= 0.05) {
+        if (this.permitScaleOut() && delta >= 0.05) {
           delta = Math.floor(delta * 100) / 100;
           newT = delta + duration - this.timeRange[0];
           this.timeRange[1] = this.timeRange[0] + newT;
@@ -538,8 +529,10 @@ class TrackItem {
       this.transition.dispose();
       this.transition = null;
     }
+    console.log('trackItem dispose in.');
     this.getCanvas().remove(this.itemPanel);
     this.track.remove(this);
+    this.track.timeline.fire(`track:ui:remove`, { item: this });
   }
 
   setTransition() {
@@ -575,6 +568,16 @@ class TrackItem {
     return { left, top, width, height };
   }
 
+  focus() {
+    // console.log('focus track item start:', this.start);
+    this.track.active(this);
+    // this.track.timeline.fire(`${this.track.eventPrefix.slip}:selected`, { item: this });
+  }
+
+  blur() {
+    this.track.timeline.fire(`${this.track.eventPrefix.slip}:unselected`, { item: this });
+  }
+
   _bindEventOnObj(fObj, cb) {
     const self = this;
 
@@ -584,11 +587,13 @@ class TrackItem {
           cb(this);
         }
       },
-      selected() {},
+      selected() {
+        self.focus();
+      },
       deselected() {},
       modifiedInGroup() {},
       mousedown() {
-        self.track.active(self);
+        // self.track.active(self);
       },
       moving() {},
     });

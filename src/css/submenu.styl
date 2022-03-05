@@ -1,50 +1,5 @@
 /* SUBMENU */
-/*
-.{prefix}-layer-main-left
-    .{prefix}-media-controls
-        height: 100%;
-        .{prefix}-submenu
-            display: none;
-            position: relative;
-            overflow: hidden;
-            overflow-y: auto;
-            height: 100%;
-            width: 60px;
-            .{prefix}-button:hover svg > use.active
-                display: block;
-            .{prefix}-submenu-item
-                li
-                    display: inline-block;
-                    align-content: center;
-                .{prefix}-button
-                    position: relative;
-                    cursor: pointer;
-                    display: inline-block;
-                    font-weight: normal;
-                    font-size: 11px;
-                label > span
-                    display: inline-block;
-                    cursor: pointer;
-                    padding-top: 5px;
-                    font-family: "Noto Sans", sans-serif;
-                    font-size: 11px;
-            > div
-                display: none;
-                text-align: center;
 
-.{prefix}-container
-    .{prefix}-layer-main.{prefix}-menu-make .{prefix}-submenu > div.{prefix}-menu-make,
-    .{prefix}-layer-main.{prefix}-menu-amake .{prefix}-submenu > div.{prefix}-menu-amake,
-    .{prefix}-layer-main.{prefix}-menu-imitate .{prefix}-submenu > div.{prefix}-menu-imitate,
-    .{prefix}-layer-main.{prefix}-menu-storage .{prefix}-submenu > div.{prefix}-menu-storage
-        display: table-cell;
-    .{prefix}-layer-main.{prefix}-menu-make,
-    .{prefix}-layer-main.{prefix}-menu-amake,
-    .{prefix}-layer-main.{prefix}-menu-imitate,
-    .{prefix}-layer-main.{prefix}-menu-storage
-        .{prefix}-submenu
-            display: table;
-*/
 .{prefix}-media-layer-main
     .{prefix}-submenu-item
     li
@@ -84,7 +39,7 @@
               position: relative;
               display: inline-block;
               border-radius: 2px;
-              padding: 7px 8px 3px 8px;
+              padding: 0;
               cursor: pointer;
               margin: 0;
               margin-right: 4px;
@@ -173,6 +128,26 @@
 .{prefix}-layer-main-left
     .{prefix}-media-controls.templateInstance
         .{prefix}-track-menu.templateInstance
+            display: block;
+
+.{prefix}-layer-main-left
+    .{prefix}-media-controls.sceneeffect
+        .{prefix}-track-menu.sceneeffect
+            display: block;
+
+.{prefix}-layer-main-left
+    .{prefix}-media-controls.backcanvas
+        .{prefix}-track-menu.backcanvas
+            display: block;
+
+.{prefix}-layer-main-left
+    .{prefix}-media-controls.scenesetting            
+        .{prefix}-track-menu.scenesetting
+            display: block;
+
+.{prefix}-layer-main-left
+    .{prefix}-media-controls.pip            
+        .{prefix}-track-menu.pip
             display: block;
 
 .{prefix}-layer-main-left

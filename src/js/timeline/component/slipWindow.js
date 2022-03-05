@@ -22,8 +22,7 @@ class SlipWinndow {
       hoverCursor: 'default',
       selectable: false,
       stroke: '#ffffff',
-      fill: '#898989',
-      backgroundColor: 'transparent',
+      backgroundColor: 'rgba(137,137,137,0.5)',
       strokeWidth: 1,
       originX: 'left',
       fontSize: '11',
@@ -42,6 +41,7 @@ class SlipWinndow {
       width: 10,
       lockMovementY: true,
       lockRotation: true,
+      lockScalingFlip: true,
       lockScalingX: false,
       lockScalingY: true,
       height: tickHeight,
@@ -67,8 +67,8 @@ class SlipWinndow {
     this.hide();
     this.target = item;
     const rect = this.updateTargetRect();
-    rect.top -= 1;
-    rect.height += 2;
+    // rect.top -= 1;
+    // rect.height += 2;
     // const { ml, mr } = this.win.oCoords;
     this.win.scaleX = 1;
     this.win.set(rect);
@@ -82,6 +82,7 @@ class SlipWinndow {
     // });
     this.lable.bringToFront();
     this.win.bringToFront();
+    this.win.setCoords();
     this.getTimeline().updateActiveObj(this.win);
     this.target.on({
       'track:item:move': this._handlers.targetmove,

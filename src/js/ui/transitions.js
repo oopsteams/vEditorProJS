@@ -4,8 +4,9 @@ import templateHtml from '@/ui/template/submenu/transitions';
 import itemHtml from '@/ui/template/texture/mediaitem';
 import { cls } from '@/util';
 // import { eventNames, selectorNames } from '@/consts';
-const minItemWidth = 120;
+const minItemWidth = 100;
 const maxLabelHeight = 20;
+const maxLineCount = 6;
 const ItemBorderWeight = 4;
 
 class Transitions extends TextureUI {
@@ -109,8 +110,11 @@ class Transitions extends TextureUI {
         this.activedTransition = item;
         menuNames.push('delete');
         // this.disableSubmenus(menuNames);
+        console.log('active transition activedTransition:', this.activedTransition);
         this.addSubMenu(menuNames);
+
         const { trackItem } = this.activedTransition.context;
+
         if (trackItem) {
           this.setTrackItem(trackItem);
         }
@@ -136,8 +140,12 @@ class Transitions extends TextureUI {
   }
 
   initDatas(callback) {
-    this.initCallback = callback;
-    this.datasource.fire('transitions:load', {});
+    if (!this.inited) {
+      this.initCallback = callback;
+      this.datasource.fire('transitions:load', {});
+    } else if (callback) {
+      callback();
+    }
   }
 
   existTransitionData(dataItem) {
@@ -196,16 +204,48 @@ class Transitions extends TextureUI {
     return null;
   }
 
+  _onAddTransitionFromTemplate({ section, callback }) {
+    this.initDatas(() => {
+      const { mode, dur, pre } = section;
+      const transition = this.getTransitionSectionByMode(mode);
+      if (!transition) {
+        if (callback) {
+          callback();
+        }
+
+        return;
+      }
+      const trackItem = this.getTrackItem({ uid: pre });
+      if (trackItem) {
+        transition.dur = dur;
+        transition.trackItem = trackItem;
+        this.ui.addTransition(trackItem, transition.dur, transition, () => {
+          this.activeElement(transition.elemId);
+          if (callback) {
+            callback();
+          }
+        });
+      } else if (callback) {
+        callback();
+      }
+    });
+  }
+
   setupTransition(trackItem, transition, callback) {
     transition.trackItem = trackItem;
     this.ui.addTransition(trackItem, transition.dur, transition, () => {
       const section = this.parent.getSectionByItem(trackItem);
+      console.log('setupTransition transition:', transition, ',section:', section);
       this.datasource.fire('track:transition:add', {
         transition,
         section,
         callback,
       });
     });
+  }
+
+  getTrackItem(section) {
+    return this.getUI().timeLine.track.getItemByUid(section.uid);
   }
 
   _onAddBtnClick(event) {
@@ -243,7 +283,7 @@ class Transitions extends TextureUI {
     const allDataMenus = this._els.mainLayer.querySelectorAll(menuCss);
     allDataMenus.forEach((dm) => {
       const { id } = dm.querySelector('svg').dataset;
-      console.log('activeElement dm dataset id:', id);
+      console.log('activeElement dm dataset id:', id, ',elemId:', elemId);
       dm.classList.remove('active');
       if (id === elemId) {
         dm.classList.add('active');
@@ -270,7 +310,7 @@ class Transitions extends TextureUI {
       html;
     const onAddBtnClick = this._onAddBtnClick.bind(this);
     const boxSize = 2;
-    const { width, height } = this.adjustItemSize(minItemWidth);
+    const { width, height } = this.adjustItemSize(minItemWidth, maxLineCount);
     const imgWidth = width - ItemBorderWeight;
     const imgHeight = height - maxLabelHeight - ItemBorderWeight - boxSize * 2;
     const labelWidth = imgWidth;
@@ -293,7 +333,7 @@ class Transitions extends TextureUI {
     html = `<div><img src="${src}" style="${imgStyle}" title="${fileName}" alt="${fileName}" /></div>`;
     html += `<div style="${labelStyle}">${fileName}</div>`;
     html += `<div style="${btnStyle}">`;
-    html += `<span style="float:right;" class="${this.cssPrefix}-menu check">`;
+    html += `<span style="float:right;" class="${this.cssPrefix}-menu ${this.cssPrefix}-item check">`;
     html += `${this.makeSvgIcon(['normal', 'active', 'hover'], 'check', false)}`;
     html += `</span></div>`;
     layerItem.style.width = `${width}px`;
@@ -334,6 +374,10 @@ class Transitions extends TextureUI {
     this.getUI().timeLine.on({
       'slip:item:deselected': onItemDeactive,
       'slip:item:selected': onItemActive,
+    });
+    const onAddTransitionFromTemplate = this._onAddTransitionFromTemplate.bind(this);
+    this.datasource.on({
+      'sync:main:track:transition': onAddTransitionFromTemplate,
     });
   }
 

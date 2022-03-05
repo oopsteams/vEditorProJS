@@ -156,6 +156,7 @@ export const keyCodes = {
   ARROW_DOWN: 40,
   ARROW_UP: 38,
   SPACE: 32,
+  ENTER: 13,
 };
 
 export const fObjectOptions = {
@@ -194,7 +195,46 @@ export const defaultTextRangeValues = {
   realTimeEvent: true,
   min: 10,
   max: 100,
-  value: 50,
+  value: 24,
+};
+
+export const defaultRotationRangeValues = {
+  realTimeEvent: true,
+  min: -180,
+  max: 180,
+  value: 0,
+};
+
+export const defaultScaleRangeValues = {
+  realTimeEvent: true,
+  min: 0.5,
+  max: 1.5,
+  value: 1,
+  useDecimal: true,
+};
+
+export const defaultRateRangeValues = {
+  realTimeEvent: true,
+  min: 0.01,
+  max: 0.5,
+  value: 0.3,
+  useDecimal: true,
+};
+
+export const defaultOpacityRangeValues = {
+  realTimeEvent: true,
+  min: 0,
+  max: 1,
+  value: 0,
+  useDecimal: true,
+};
+
+export const defaultDurationRangeValues = {
+  realTimeEvent: true,
+  min: 1,
+  max: 600,
+  value: 2,
+  useDecimal: false,
 };
 
 export const familyMap = {
@@ -211,4 +251,16 @@ export const familyMap = {
 export const textDirection = {
   horizontal: '水平',
   vertical: '垂直',
+};
+
+export const OBJ_TYPE = {
+  CROPZONE: 'cropzone',
+};
+
+export const SPECIAL_TAGS = {
+  LYRIC: 'lyric',
+};
+
+export const SPECIAL_VALUES = {
+  Duration: 3,
 };

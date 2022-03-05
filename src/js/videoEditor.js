@@ -60,7 +60,7 @@ class VideoEditor {
       const UIOption = options.includeUI;
       UIOption.usageStatistics = options.usageStatistics;
 
-      this.ui = new UI(wrapper, UIOption, this.getActions());
+      this.ui = new UI(wrapper, UIOption, this);
       options = this.ui.setUiDefaultSelectionStyle(options);
     }
     this._invoker = new Invoker();
@@ -104,14 +104,21 @@ class VideoEditor {
       applyGroupSelectionStyle: options.applyGroupSelectionStyle,
     });
 
-    if (this.ui) {
-      this.ui.initCanvas();
-      // this.setReAction();
-      // this._attachColorPickerInputBoxEvents();
-      this.ui.editor = this;
-    }
     fabric.enableGLFiltering = false;
     this.permitMouseListener = false;
+    this.inited = false;
+  }
+
+  init() {
+    if (!this.inited) {
+      this.inited = true;
+      if (this.ui) {
+        // this.ui.editor = this;
+        this.ui.initCanvas();
+        // this.setReAction();
+        // this._attachColorPickerInputBoxEvents();
+      }
+    }
   }
 
   openMouseListener() {
@@ -133,6 +140,7 @@ class VideoEditor {
   mergeEditorSize(options) {
     const editorRect = {};
     const _rect = this.ui.getEditorMaxRect();
+    this.outOptions = options;
     console.log('mergeEditorSize _rect:', _rect);
     if (_rect) {
       editorRect.cssMaxWidth = options.width;
@@ -303,10 +311,10 @@ class VideoEditor {
     return this.execute(commands.ADD_SHAPE, type, options);
   }
 
-  addPolygonImg(type) {
+  addPolygonImg(type, onAdded) {
     const shape = this._graphics.getComponent(type);
     if (shape && shape.addPolygonImg) {
-      shape.addPolygonImg();
+      shape.addPolygonImg({ onAdded });
     }
   }
 
@@ -454,12 +462,12 @@ class VideoEditor {
 
   _attachDomEvents() {
     // ImageEditor supports IE 9 higher
-    document.addEventListener('keydown', this._handlers.keydown);
+    // document.addEventListener('keydown', this._handlers.keydown);
   }
 
   _detachDomEvents() {
     // ImageEditor supports IE 9 higher
-    document.removeEventListener('keydown', this._handlers.keydown);
+    // document.removeEventListener('keydown', this._handlers.keydown);
   }
 
   _attachInvokerEvents() {
@@ -528,6 +536,7 @@ class VideoEditor {
 
   resetDimension(_option) {
     const rect = this.mergeEditorSize(_option);
+
     if (rect) {
       console.log('_option:', _option, ',rect:', rect);
       const dim = {
@@ -536,11 +545,36 @@ class VideoEditor {
         'max-width': `${rect.cssMaxWidth}px`,
         'max-height': `${rect.cssMaxHeight}px`,
       };
-      this._graphics.setCanvasCssDimension(dim);
+      console.log('videoEditor resetDimension:', dim, ',_option:', _option);
       this._graphics.setCanvasBackstoreDimension(_option);
+      this._graphics.setCanvasCssDimension(dim);
+
+      this.dimensionInited = false;
+      // this.getCanvas().renderAll();
     }
 
     return rect;
+  }
+
+  updateCanvasSize(_option) {
+    let zoom;
+    const rect = this.mergeEditorSize(_option);
+    if (rect) {
+      zoom = this.getCanvas().getZoom();
+      console.log('canvas before zoom:', zoom);
+      // this.resetDimension(_option);
+      // this.getCanvas().setWidth(rect.cssMaxWidth);
+      // this.getCanvas().setHeight(rect.cssMaxHeight);
+      const dim = {
+        width: '100%',
+        height: '100%', // Set height '' for IE9
+        'max-width': `${rect.cssMaxWidth}px`,
+        'max-height': `${rect.cssMaxHeight}px`,
+      };
+      this.getCanvas().setDimensions(dim);
+      zoom = this.getCanvas().getZoom();
+      console.log('canvas after zoom:', zoom);
+    }
   }
 
   getCanvas() {
@@ -646,8 +680,8 @@ class VideoEditor {
 
   _onObjectModified(obj) {
     if (obj.type !== OBJ_TYPE.CROPZONE) {
-      this._invoker.fire(events.EXECUTE_COMMAND, getObjectType(obj.type));
-      this._pushModifyObjectCommand(obj);
+      // this._invoker.fire(events.EXECUTE_COMMAND, getObjectType(obj.type));
+      // this._pushModifyObjectCommand(obj);
     }
   }
 

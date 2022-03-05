@@ -3,7 +3,7 @@
  * @fileoverview Shape component
  */
 import { extend } from 'tui-code-snippet';
-import fabric from 'fabric';
+// import fabric from 'fabric';
 import Component from '@/interface/component';
 import resizeHelper from '@/helper/shapeResizeHelper';
 import {
@@ -112,6 +112,19 @@ function actionHandler(eventData, transform, x, y) {
   return true;
 }
 
+function polygonOriginPositionHandler(pointIndex, fabricObject) {
+  const x = fabricObject._points[pointIndex].x - fabricObject.pathOffset.x,
+    y = fabricObject._points[pointIndex].y - fabricObject.pathOffset.y;
+
+  return fabric.util.transformPoint(
+    { x, y },
+    fabric.util.multiplyTransformMatrices(
+      fabricObject.canvas.viewportTransform,
+      fabricObject.calcTransformMatrix()
+    )
+  );
+}
+
 function polygonPositionHandler(dim, finalMatrix, fabricObject) {
   const x = fabricObject.points[this.pointIndex].x - fabricObject.pathOffset.x,
     y = fabricObject.points[this.pointIndex].y - fabricObject.pathOffset.y;
@@ -123,6 +136,45 @@ function polygonPositionHandler(dim, finalMatrix, fabricObject) {
       fabricObject.calcTransformMatrix()
     )
   );
+}
+
+function polygonRender(ctx, left, top, styleOverride, fabricObject) {
+  let opos, cornerColor, oStyleOverride;
+  styleOverride = styleOverride || {};
+  switch (styleOverride.cornerStyle || fabricObject.cornerStyle) {
+    case 'circle':
+      opos = polygonOriginPositionHandler(this.pointIndex, this._ctx);
+      cornerColor = 'transparent';
+      oStyleOverride = extend({}, styleOverride);
+      oStyleOverride.cornerColor = cornerColor;
+      fabric.controlsUtils.renderCircleControl.call(
+        this,
+        ctx,
+        opos.x,
+        opos.y,
+        oStyleOverride,
+        fabricObject
+      );
+      // console.log('c points control:', this._ctx.points, ',styleOverride:', styleOverride);
+      fabric.controlsUtils.renderCircleControl.call(
+        this,
+        ctx,
+        left,
+        top,
+        styleOverride,
+        fabricObject
+      );
+      break;
+    default:
+      fabric.controlsUtils.renderSquareControl.call(
+        this,
+        ctx,
+        left,
+        top,
+        styleOverride,
+        fabricObject
+      );
+  }
 }
 
 /**
@@ -212,14 +264,20 @@ export default class Shape extends Component {
     fabric.util.addListener(document, 'keyup', this._handlers.keyup);
   }
 
-  addPolygonImg() {
+  addPolygonImg({ onAdded }) {
     let scaleW, scaleH, aspect, _left, _top;
-    const canvasImg = this.getCanvasImage();
+    // const canvasImg = this.getCanvasImage();
+    // const canvasRect = {
+    //   width: canvasImg ? canvasImg.width : 0,
+    //   height: canvasImg ? canvasImg.height : 0,
+    // };
     const canvasRect = {
-      width: canvasImg ? canvasImg.width : 0,
-      height: canvasImg ? canvasImg.height : 0,
+      width: this.getCanvas().getWidth(),
+      height: this.getCanvas().getHeight(),
     };
     const { polygonImg } = this._options;
+    // console.log('shape addPolygonImg add polygon image:', polygonImg);
+    // console.log('addPolygonImg canvasRect:', canvasRect);
     if (polygonImg.width && polygonImg.width > 0 && canvasRect.width > 0) {
       aspect = polygonImg.height / polygonImg.width;
       if (polygonImg.width > canvasRect.width || polygonImg.height > canvasRect.height) {
@@ -241,16 +299,31 @@ export default class Shape extends Component {
       _top = canvasRect.height / 2;
       scaleW = scaleW / polygonImg.width;
       scaleH = scaleH / polygonImg.height;
+      // console.log('shape addPolygonImg scaleW:', scaleW, ',scaleH:', scaleH);
+
       this.add(this._type, {
         left: _left,
         top: _top,
         scaleX: scaleW,
         scaleY: scaleH,
+        lockScalingFlip: true,
+        lockSkewingX: true,
+        lockSkewingY: true,
         width: polygonImg.width,
         height: polygonImg.height,
         fill: { type: 'filter' },
       }).then((objectProps) => {
         this.fire(eventNames.ADD_OBJECT, objectProps);
+        if (onAdded) {
+          this._shapeObj.setControlsVisibility({
+            ml: false,
+            mr: false,
+            mt: false,
+            mb: false,
+            mtr: false,
+          });
+          onAdded(this._shapeObj);
+        }
       });
       this.getCanvas().off({
         'mouse:move': this._handlers.mousemove,
@@ -323,13 +396,16 @@ export default class Shape extends Component {
       const shapeObj = this._createInstance(type, extendOption);
       const objectProperties = this.graphics.createObjectProperties(shapeObj);
 
-      this._bindEventOnShape(shapeObj);
+      this._bindEventOnShape(shapeObj, () => {
+        resolve(objectProperties);
+        this._resetPositionFillFilter(shapeObj);
+      });
 
       canvas.add(shapeObj).setActiveObject(shapeObj);
 
-      this._resetPositionFillFilter(shapeObj);
+      // this._resetPositionFillFilter(shapeObj);
 
-      resolve(objectProperties);
+      // resolve(objectProperties);
     });
   }
 
@@ -351,7 +427,7 @@ export default class Shape extends Component {
    */
   change(shapeObj, options) {
     let canvasImage;
-    const { polygonImg } = this._options;
+    const { polygonImg } = shapeObj; // this._options;
     return new Promise((resolve, reject) => {
       if (!isShape(shapeObj)) {
         reject(rejectMessages.unsupportedType);
@@ -425,7 +501,7 @@ export default class Shape extends Component {
    * @private
    */
   _createInstance(type, options) {
-    let instance, points, _x, _y, _w, _h;
+    let instance, points, _x, _y, _w, _h, _points;
 
     switch (type) {
       case 'rect':
@@ -453,15 +529,24 @@ export default class Shape extends Component {
           { x: _x, y: _y },
           { x: _x + _w / 2, y: _y },
           { x: _x + _w, y: _y },
+          { x: _x + _w, y: _y + _h / 2 },
           { x: _x + _w, y: _y + _h },
+          { x: _x + _w / 2, y: _y + _h },
           { x: _x, y: _y + _h },
+          { x: _x, y: _y + _h / 2 },
         ];
-        // console.log('Polygon points:', points);
+        _points = [];
+        points.forEach((d) => {
+          _points.push(extend({}, d));
+        });
+        console.log('Polygon points:', JSON.stringify(points));
         instance = new fabric.Polygon(points, options);
+        instance._points = _points;
         instance.controls = fabric.Object.prototype.controls;
         instance.sx = 1;
         instance.sy = 1;
         instance._type = 'polygon';
+        instance.polygonImg = this._options.polygonImg;
         break;
       default:
         instance = {};
@@ -493,15 +578,18 @@ export default class Shape extends Component {
   /**
    * Bind fabric events on the creating shape object
    * @param {fabric.Object} shapeObj - Shape object
+   * @param {Object} onAdded - callback
    * @private
    */
-  _bindEventOnShape(shapeObj) {
+  _bindEventOnShape(shapeObj, onAdded) {
     const self = this;
     const canvas = this.getCanvas();
-
+    const controlMouseUpHandler = (event) => {
+      self.graphics.fire('pip:object:masked', { shapeObj: self._shapeObj, event });
+    };
     shapeObj.on({
       mousedblclick() {
-        self._shapeObj = this;
+        // self._shapeObj = this;
         if (self._shapeObj._type === 'polygon') {
           if (!self._shapeObj.edit) {
             self._shapeObj._cornerColor = self._shapeObj.cornerColor;
@@ -518,7 +606,10 @@ export default class Shape extends Component {
                 actionHandler: anchorWrapper(index > 0 ? index - 1 : lastControl, actionHandler),
                 actionName: 'modifyPolygon',
                 pointIndex: index,
+                mouseUpHandler: controlMouseUpHandler,
               });
+              acc[`p${index}`]._ctx = self._shapeObj;
+              acc[`p${index}`].render = polygonRender;
 
               return acc;
             }, {});
@@ -531,10 +622,11 @@ export default class Shape extends Component {
       },
       added() {
         self._shapeObj = this;
+        console.log('added _shapeObj:', this);
         resizeHelper.setOrigins(self._shapeObj);
         if (self._shapeObj._type === 'polygon') {
           self._resetPositionFillFilter(self._shapeObj);
-          const { polygonImg } = self._options;
+          const { polygonImg } = this; // self._options;
           if (polygonImg) {
             const { patternSourceCanvas } = self._shapeObj.customProps;
             if (self._shapeObj.customProps && patternSourceCanvas) {
@@ -547,13 +639,18 @@ export default class Shape extends Component {
             }
           }
         }
+        if (onAdded) {
+          onAdded();
+        }
       },
       selected() {
         self._isSelected = true;
         self._shapeObj = this;
+        console.log('selected _shapeObj:', this);
         canvas.uniformScaling = true;
         canvas.defaultCursor = 'default';
         resizeHelper.setOrigins(self._shapeObj);
+        self.graphics.fire('pip:objectSelected', { shapeObj: self._shapeObj });
       },
       deselected() {
         self._isSelected = false;
@@ -572,9 +669,15 @@ export default class Shape extends Component {
       },
       moving() {
         self._resetPositionFillFilter(this);
+        // console.log('shape moving.....,graphics:', self.graphics);
+        self.graphics.fire('pip:objectMoving', { shapeObj: self._shapeObj });
+        // this.fire('pip:objectMoving', { shapeObj: self._shapeObj, o: this });
       },
       rotating() {
         self._resetPositionFillFilter(this);
+      },
+      scaled() {
+        self.graphics.fire('pip:object:scaled', { shapeObj: self._shapeObj });
       },
       scaling(fEvent) {
         const pointer = canvas.getPointer(fEvent.e);
@@ -716,7 +819,7 @@ export default class Shape extends Component {
    */
   _resetPositionFillFilter(shapeObj) {
     let canvasImage;
-    const { polygonImg } = this._options;
+    const { polygonImg } = shapeObj; // this._options;
     if (getFillTypeFromObject(shapeObj) !== 'filter') {
       return;
     }
@@ -725,7 +828,7 @@ export default class Shape extends Component {
     const fillImage = getFillImageFromShape(shapeObj);
     const { originalAngle } = getCustomProperty(fillImage, 'originalAngle');
 
-    if (this.graphics.canvasImage.angle !== originalAngle) {
+    if (this.graphics.canvasImage && this.graphics.canvasImage.angle !== originalAngle) {
       if (shapeObj._type === 'polygon' && polygonImg) {
         canvasImage = polygonImg;
       } else {

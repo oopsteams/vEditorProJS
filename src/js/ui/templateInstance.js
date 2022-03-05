@@ -6,6 +6,7 @@ import { cls, iterator } from '@/util';
 // import { eventNames, selectorNames } from '@/consts';
 const minItemWidth = 100;
 // const maxLabelHeight = 20;
+const maxLineCount = 6;
 const ItemBorderWeight = 4;
 
 class TemplateInstance extends TextureUI {
@@ -145,6 +146,59 @@ class TemplateInstance extends TextureUI {
     setupTextEffect();
   }
 
+  installSceneEffects() {
+    const { sections } = this.sectionItem.template;
+    const commonSections = [];
+    sections.forEach((sec) => {
+      if (sec.action === 'common') {
+        commonSections.push(sec);
+      }
+    });
+    const { sceneEffect } = this.subMenuElement.makeInstance;
+
+    const setupSceneEffects = () => {
+      iterator(
+        commonSections,
+        (item, idx, comeon) => {
+          if (idx >= 0) {
+            if (item.sceneeffects && item.sceneeffects.length > 0) {
+              const trackItem = this.ui.timeLine.track.getItemByUid(item.uid);
+              iterator(
+                item.sceneeffects,
+                (se, _idx, _comeon) => {
+                  if (_idx >= 0) {
+                    // const { mode } = se;
+                    // const cfg = sceneEffect.getSeByMode(mode);
+                    sceneEffect.setupSceneEffect(trackItem, se, () => {
+                      _comeon(true);
+                    });
+                  }
+                },
+                () => {
+                  comeon(true);
+                }
+              );
+            } else {
+              comeon(true);
+            }
+          }
+        },
+        () => {
+          console.log('installSceneEffects complete!');
+          this.installWave();
+        }
+      );
+    };
+
+    if (!sceneEffect.inited) {
+      sceneEffect.initDatas(() => {
+        setupSceneEffects();
+      });
+    } else {
+      setupSceneEffects();
+    }
+  }
+
   installAnimations() {
     const { sections } = this.sectionItem.template;
     const commonSections = [];
@@ -190,7 +244,8 @@ class TemplateInstance extends TextureUI {
         },
         () => {
           console.log('installAnimations complete!');
-          this.installWave();
+          // this.installWave();
+          this.installSceneEffects();
         }
       );
     };
@@ -315,11 +370,14 @@ class TemplateInstance extends TextureUI {
   }
 
   _onParserSetuped() {
-    this.pos += 1;
-    this.installEditor();
+    if (this.actived) {
+      this.pos += 1;
+      this.installEditor();
+    }
   }
 
   cleanUI() {
+    this.pos = 0;
     this._els.mainLayer.innerHTML = '';
     this.items = {};
     this.makeparsers = {};
@@ -576,7 +634,7 @@ class TemplateInstance extends TextureUI {
       html;
     // const onAddBtnClick = this._onAddBtnClick.bind(this);
     const boxSize = 2;
-    const { width, height } = this.adjustItemSize(minItemWidth, 6);
+    const { width, height } = this.adjustItemSize(minItemWidth, maxLineCount);
     const imgWidth = width - ItemBorderWeight;
     const labelHeight = 0; // maxLabelHeight;
     const imgHeight = height - labelHeight - ItemBorderWeight - boxSize * 2;

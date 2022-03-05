@@ -29,12 +29,14 @@
     <path fill="inherit" stroke="inherit" d="M 22.5 4.5l-4.5 8a2 2 0 0 0 2 1L25 4.5z" />
   </symbol>
   <symbol id="ic-transition" viewBox="0 0 32 32">
-    <path fill="inherit" stroke="none" stroke-linecap="round" stroke-linejoin="round" d="M6.5 22l0-10 17 10l0-10 -17 10z"/>
-    <path fill="inherit" stroke="inherit" d="M27.01 4a11 11 0 0 1 -1 1H3v24h24V4.1a1 1 0 0 1 1 1V29a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h15.01z"/>
+    <path fill="inherit" stroke="inherit" stroke-linecap="round" stroke-linejoin="round" d="M7.5 22l0-10 17 10l0-10 -17 10z"/>
+    <path fill="inherit" stroke="inherit" stroke-linecap="square" d="M27 28h-23.5v-24h24v22a 2 2 0 0 1 -2 0v-20h-20v20h21.5a 2 2 0 0 1 0 2z"/>
   </symbol>
   <symbol id="ic-animation" viewBox="0 0 32 32">
-    <path fill="inherit" stroke="inherit" d="M27.01 4a11 11 0 0 1 -1 1H3v24h24V4.1a1 1 0 0 1 1 1V29a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h15.01z"/>
-    <path fill="inherit" stroke="none" stroke-linecap="round" stroke-linejoin="round" d="M11 12l0 10l10 -5z" />
+    <path fill="inherit" stroke="inherit"  stroke-linecap="round" stroke-linejoin="round" d="M13 14l0 10l10 -5z" />
+    <path fill="inherit" stroke="inherit"  stroke-linecap="round" stroke-linejoin="round" d="M11 11l0 10l10 -5z" />
+    <path fill="inherit" stroke="inherit"  stroke-linecap="round" stroke-linejoin="round" d="M9 8l0 10l10 -5z" />
+    <path fill="inherit" stroke="inherit" stroke-linecap="square" d="M27 28h-23.5v-24h24v22a 2 2 0 0 1 -2 0v-20h-20v20h21.5a 2 2 0 0 1 0 2z"/>
   </symbol>
   <symbol id="ic-separate" viewBox="0 0 32 32">
     <path fill="inherit" stroke="inherit" d="M17 4a1 1 0 0 1 -1 1H3v24h24V4.1a1 1 0 0 1 1 1V29a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h15.01z"/>
@@ -73,18 +75,18 @@
   </symbol>
 
 <symbol id="ic-music" viewBox="0 0 32 32">
-    <path fill="inherit" stroke="inherit" d="M27.01 4a11 11 0 0 1 -1 1H3v24h24V4.1a1 1 0 0 1 1 1V29a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h15.01z"/>
-    <path fill="inherit" stroke="inherit" d="M15 20a2 2 0 0 0 -1 -1a4 4 0 1 0 1 1.5a2 2 0 0 0 -1 0.5a2 2 0 1 1 -1 -1z"/>
-    <path fill="inherit" stroke="inherit" d="M15 20v-10h2v10z"/>
-    <path fill="inherit" stroke="inherit" d="M17 11l3 2h2v2h-3z"/>
+    <path fill="inherit" stroke="inherit" d="M16.5 18a2 2 0 0 0 -1 -1a4 4 0 1 0 1 1.5a2 2 0 0 0 -1 0.5a2 2 0 1 1 -1 -1z"/>
+    <path fill="inherit" stroke="inherit" d="M16 18v-10h2v10z"/>
+    <path fill="inherit" stroke="inherit" d="M18 9l3 2h2v2h-3z"/>
+    <path fill="inherit" stroke="inherit" stroke-linecap="square" d="M27 28h-23.5v-24h24v22a 2 2 0 0 1 -2 0v-20h-20v20h21.5a 2 2 0 0 1 0 2z"/>
 </symbol>
 <symbol id="ic-text" viewBox="0 0 32 32">
-    <path fill="inherit" stroke="inherit" d="M27 4a1 1 0 0 1 -1 1h-23v24h24v-24.5a1 1 0 0 1 1 1v23.5a1 1 0 0 1-1 1h-24a1 1 0 0 1-1-1v-24a1 1 0 0 1 1-1h15z"/>
-    <path fill="inherit" stroke="inherit" d="M7 11h1a1 1 0 0 0 1 -1h4a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1a1 1 0 0 0 1 1h2a1 1 0 0 0 1 -1a1 1 0 0 1 -1 -1v-12a1 1 0 0 1 1 -1h4a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-2h-18v2a1 1 0 0 0 1 1z"/>
+    <path fill="inherit" stroke="inherit" d="M9 11h1a1 1 0 0 0 1 -1h3a1 1 0 0 1 1 1v11a1 1 0 0 1 -1 1a1 1 0 0 0 1 1h2a1 1 0 0 0 1 -1a1 1 0 0 1 -1 -1v-11a1 1 0 0 1 1 -1h3a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-2h-16v2a1 1 0 0 0 1 1z"/>
+    <path fill="inherit" stroke="inherit" stroke-linecap="square" d="M27 28h-23.5v-24h24v22a 2 2 0 0 1 -2 0v-20h-20v20h21.5a 2 2 0 0 1 0 2z"/>
 </symbol>
 <symbol id="ic-apply" viewBox="0 0 32 32">
-    <path d="M0 0h24v24H0z" stroke="inherit" fill="none"/>
-    <path fill="none" stroke="inherit" d="M4 12.011l5 5L20.011 6"/>
+    <path fill="inherit" stroke="inherit" d="M9 16l5 5l10 -10a1 1 0 0 0 -1 -1l-9 9l-4 -4a1 1 0 0 0 -1 1z"/>
+    <path fill="inherit" stroke="inherit" stroke-linecap="square" d="M27 28h-23.5v-24h24v22a 2 2 0 0 1 -2 0v-20h-20v20h21.5a 2 2 0 0 1 0 2z"/>
 </symbol>
 <symbol id="ic-play" viewBox="0 0 32 32">
     <path fill="inherit" d="M32 0H0v32h32z" opacity=".5"/>
@@ -128,6 +130,78 @@
     <path stroke="inherit" fill="inherit" d="M16.5 15h1v2a2 2 0 1 1 -4 0v-2h1v1.5a1 1 0 0 0 2 0v-1z"/>
     <path stroke="inherit" fill="inherit" d="M24 11.5h-8a1 1 0 0 0 0 1h3v6a1 1 0 0 0 2 0v-6h3a1 1 0 0 0 0 -1z"/>
     <path stroke="inherit" fill="inherit" d="M26.5 17a2 2 0 1 1 -4 0a2 2 0 1 1 4 0z"/>
+</symbol>
+<symbol id="ic-scenesetting" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M23 7l-16 16a2 2 0 0 0 2 2l16 -16a2 2 0 0 0 -2 -2z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M13 7l-6 6a2 2 0 0 0 2 2l6 -6a2 2 0 0 0 -2 -2z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M23 17l-6 6a2 2 0 0 0 2 2l6 -6a2 2 0 0 0 -2 -2z"/>
+    <path fill="inherit" stroke="inherit" stroke-linecap="square" d="M27 28h-23.5v-24h24v22a 2 2 0 0 1 -2 0v-20h-20v20h21.5a 2 2 0 0 1 0 2z"/>
+</symbol>
+<symbol id="ic-foregroundeffect" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M23 7l-4 4a2 2 0 0 0 2 2l4 -4a2 2 0 0 0 -2 -2z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M11 19l-4 4a2 2 0 0 0 2 2l4 -4a2 2 0 0 0 -2 -2z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M13 7l-6 6a2 2 0 0 0 2 2l6 -6a2 2 0 0 0 -2 -2z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M23 17l-2 2a2 2 0 0 0 2 2l2 -2a2 2 0 0 0 -2 -2z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M18 22l-2 2a2 2 0 0 0 2 2l2 -2a2 2 0 0 0 -2 -2z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M27 26l-6 -6a2 2 0 0 0 -2 2l6 6a2 2 0 0 0 2 -2z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M19 20l-1 -7l-4 6l7 -3l-7 -1l5 5z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M20 28h-16v-24h24v18a 2 2 0 0 1 -2 0v-16h-20v20h14a 2 2 0 0 1 0 2z"/>
+</symbol>
+<symbol id="ic-sceneeffect" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M27 26l-6 -6a2 2 0 0 0 -2 2l6 6a2 2 0 0 0 2 -2z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M19 20l-1 -7l-4 6l7 -3l-7 -1l5 5z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M7 16l6 -6l2 2a1 1 0 0 1 -1 1l-1 -1l-6 6a1 1 0 0 1 -1 -1z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M25 11l-3 3l-2 -2a1 1 0 0 1 1 -1l1 1l2 -2a1 1 0 0 1 1 1z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M20 28h-16v-24h24v18a 2 2 0 0 1 -2 0v-16h-20v20h14a 2 2 0 0 1 0 2"/>
+</symbol>
+<symbol id="ic-export" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" d="M32 0H0v32h32z" opacity=".5"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M4 14v12h24v-12a2 2 0 0 0 -2 0v10h-20v-10a2 2 0 0 0 -2 0z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M13 18v-4a4 4 0 0 1 4 -4h2v2h-1a 4 4 0 0 0 -2.5 1.5v4.5h-2z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M17 7l4 4l-4 4a1 1 0 0 0 1 1l5 -5l-5 -5a1 1 0 0 0 -1 1z"/>
+</symbol>
+<symbol id="ic-pip" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M27.5 28h-23.5v-24h24v22a 2 2 0 0 1 -2 0v-20h-20v20h21.5a 2 2 0 0 1 0 2z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="round" stroke-linejoin="round" d="M18 19a 4 4 0 1 1 1 -1a2 2 0 0 0 2 1a 6 6 0 1 0 -2 2a 2 2 0 0 0 -1 -2z" />
+</symbol>
+<symbol id="ic-iupload" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M27.5 28h-23.5v-24h24v22a 2 2 0 0 1 -2 0v-20h-20v20h21.5a 2 2 0 0 1 0 2z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="round" stroke-linejoin="round" d="M18.5 15v-6"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="round" stroke-linejoin="round" d="M15.5 12l3 -3l3 3"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="round" stroke-linejoin="round" d="M18.5 19l1.951-2.53 4 5.184h-17l6.5-8.84 4.549 6.186z"/>
+</symbol>
+<symbol id="ic-mstar" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M16,4l3.885,-2.49L22,5.08l4.607,-0.314L26.392,10l4.098,2.115L28,16l2.49,3.885L26.392,22l0.213,4.605L22,26.392l-2.115,4.098L16,28l-3.885,2.49L10,26.392l-4.605,0.213L5.608,22l-4.098,-2.115L4,16l-2.49,-3.885L5.608,10l-0.213,-4.605L10,5.608l2.115,-4.098L16,4z"/>
+</symbol>
+<symbol id="ic-rect" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M2,2h28v28h-28v-28z"/>
+</symbol>
+<symbol id="ic-circle" viewBox="0 0 32 32">
+    <circle stroke="inherit" fill="inherit" cx="16" cy="16" r="14" />
+</symbol>
+<symbol id="ic-lock" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M 11 16v-5a1 1 0 0 1 1 -1h9a1 1 0 0 1 1 1v5h2v-7a1 1 0 0 0 -1 -1h-13a1 1 0 0 0 -1 1v7h2z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M 9 18h-2v8h18v-8h-14v-1a1 1 0 0 1 1 -1h14a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-20a1 1 0 0 1 -1 -1v-10a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1z"/>
+</symbol>
+<symbol id="ic-unlock" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M 11 11v-4a1 1 0 0 1 1 -1h9a1 1 0 0 1 1 1v9h2v-11a1 1 0 0 0 -1 -1h-13a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1a1 1 0 0 0 1 -1z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M 9 18h-2v8h18v-8h-14v-1a1 1 0 0 1 1 -1h14a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-20a1 1 0 0 1 -1 -1v-10a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1z"/>
+</symbol>
+<symbol id="ic-pre" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M 9 9v13a2 2 0 0 1 -2 0v-13a 2 2 0 0 1 2 0z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M 9.5 15l2 -5a2 2 0 0 1 2 1l-3 4z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M 9.5 16l2 5a2 2 0 0 0 2 -1l-3 -4z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M 11 15.5l1 -1h12a2 2 0 0 1 0 2h-12l-1 -1z"/>
+</symbol>
+<symbol id="ic-next" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M25 9v13a2 2 0 0 1 -2 0v-13a 2 2 0 0 1 2 0z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M 22.5 15l-2 -5a2 2 0 0 0 -2 1l3 4z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M 22.5 16l-2 5a2 2 0 0 1 -2 -1l3 -4z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M 21 15.5l-1 -1h-12a2 2 0 0 0 0 2h12l1 -1z"/>
+</symbol>
+<symbol id="ic-duplicate" viewBox="0 0 32 32">
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M21.5 22h-18v-18h18v16a 2 2 0 0 1 -2 0v-14h-14v14h15.5a 2 2 0 0 1 0 2z"/>
+    <path stroke="inherit" fill="inherit" stroke-linecap="square" d="M27.5 28h-18v-18h18v16a 2 2 0 0 1 -2 0v-14h-14v14h15.5a 2 2 0 0 1 0 2z"/>
 </symbol>
 <symbol id="ic-loading1" width="48px" height="60px" viewBox="0 0 24 30" style="enable-background:new 0 0 50 50">
     <rect x="0" y="7.6416" width="4" height="14.7168" fill="inherit" opacity="0.2">

@@ -108,6 +108,9 @@ export default ({
     .${cssPrefix}-container .${cssPrefix}-header-logo > img {
         ${biSize}
     }
+    .${cssPrefix}-foot-bar use.normal.use-default,
+    .${cssPrefix}-media-button-frame use.normal.use-default,
+    .${cssPrefix}-media-load-frame use.normal.use-default,
     .${cssPrefix}-track-menu use.normal.use-default,
     .${cssPrefix}-menu use.normal.use-default,
     .${cssPrefix}-main-menu use.normal.use-default,
@@ -116,6 +119,9 @@ export default ({
         fill: ${menuIconStyle.normal.color};
         stroke: ${menuIconStyle.normal.color};
     }
+    .${cssPrefix}-foot-bar use.active.use-default,
+    .${cssPrefix}-media-button-frame use.active.use-default,
+    .${cssPrefix}-media-load-frame use.active.use-default,
     .${cssPrefix}-track-menu use.active.use-default,
     .${cssPrefix}-menu use.active.use-default,
     .${cssPrefix}-main-menu use.active.use-default,
@@ -124,6 +130,9 @@ export default ({
         fill: ${menuIconStyle.hover.color};
         stroke: ${menuIconStyle.active.color};
     }
+    .${cssPrefix}-foot-bar use.hover.use-default,
+    .${cssPrefix}-media-button-frame use.hover.use-default,
+    .${cssPrefix}-media-load-frame use.hover.use-default,
     .${cssPrefix}-track-menu use.hover.use-default,
     .${cssPrefix}-menu use.hover.use-default,
     .${cssPrefix}-main-menu use.hover.use-default,
@@ -132,6 +141,9 @@ export default ({
         fill: ${menuIconStyle.hover.color};
         stroke: ${menuIconStyle.hover.color};
     }
+    .${cssPrefix}-foot-bar use.disabled.use-default,
+    .${cssPrefix}-media-button-frame use.disabled.use-default,
+    .${cssPrefix}-media-load-frame use.disabled.use-default,
     .${cssPrefix}-menu use.disabled.use-default,
     .${cssPrefix}-main-menu use.disabled.use-default,
     .${cssPrefix}-help-menu use.disabled.use-default {

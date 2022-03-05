@@ -1,4 +1,5 @@
 .{prefix}-media-layer-main
+    color: silver;
     .{prefix}-media-load-btn
         display: inline-block;
         width: 100%;
@@ -25,6 +26,7 @@
                 display: table-cell;
                 text-align: center;
                 vertical-align: middle;
+    .{prefix}-media-button-frame,
     .{prefix}-media-load-frame
         display: table;
         position: relative;
@@ -33,6 +35,17 @@
             display: table-cell;
             text-align: center;
             vertical-align: middle;
+            cursor: pointer;
+            svg > use
+                display: none;
+            svg > use.normal
+                display: block;
+        > input:hover + div svg > use.hover
+            display: block;
+        > div:hover svg > use.hover
+            display: block;
+        > div.active svg > use.active
+            display: block;
 
 .{prefix}-layer-main-mid
     .{prefix}-media-layer
@@ -43,6 +56,9 @@
         display: flex;
 .{prefix}-layer-main-mid.imitate
     .{prefix}-media-layer.imitate
+        display: flex;
+.{prefix}-layer-main-mid.scenesetting
+    .{prefix}-media-layer.scenesetting
         display: flex;
 .{prefix}-layer-main-mid.transition
     .{prefix}-media-layer.transition
@@ -62,6 +78,17 @@
     .{prefix}-media-layer.templateInstance
         display: flex;
   
+.{prefix}-layer-main-mid.sceneeffect
+    .{prefix}-media-layer.sceneeffect
+        display: flex;
+
+.{prefix}-layer-main-mid.backcanvas
+    .{prefix}-media-layer.backcanvas
+        display: flex;
+
+.{prefix}-layer-main-mid.pip
+    .{prefix}-media-layer.pip
+        display: flex;
 
 .{prefix}-media-layer-main
     .{prefix}-media-item
@@ -72,9 +99,9 @@
                     display: none;
                 svg > use.normal
                     display: block;
-            .{prefix}-menu:hover svg > use.hover
+            .{prefix}-item:hover svg > use.hover
                 display: block;
-            .{prefix}-menu.active svg > use.active
+            .{prefix}-item.active svg > use.active
                 display: block;
 
 .{prefix}-header-btn
@@ -95,12 +122,17 @@
     width: 100%;
     height: 100%;
     display flex;
+    font-size: 11px;
     flex-direction: row;
     .{prefix}-label
-        width: 70px;
+        width: 40px;
         display: inline-block;
     .{prefix}-media-layer-main-lbox
-        width: 50%;
+        width: 40%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        vertical-align: middle;
     .{prefix}-media-layer-main-rbox
         flex: auto;
     .tie-text-button
@@ -110,6 +142,30 @@
           align-items: center;
           vertical-align: middle;
 
+.{prefix}-media-layer-main-tbbox
+    width: 100%;
+    height: 100%;
+    display block;
+    font-size: 11px;
+    flex-direction: column;
+    .{prefix}-label
+        width: 40px;
+        display: inline-block;
+    .{prefix}-media-layer-main-tbox
+        min-height: 160px;
+        display: block;
+        flex-direction: row;
+        vertical-align: middle;
+        > div
+          width: 100%;
+    .{prefix}-media-layer-main-bbox
+        display: block;
+        flex-direction: row;
+        vertical-align: middle;
+        flex: auto;
+        > div
+          width: 100%;
+
 .{prefix}-media-layer-top
     display: flex;
     align-items: center;
@@ -118,3 +174,104 @@
 .{prefix}-media-loading
     svg
       width: 60px;
+.{prefix}-media-table
+    display: table;
+    .{prefix}-media-row
+        display: table-row;
+        position: relative;
+    .{prefix}-media-cell
+        display: table-cell;
+        vertical-align: middle;
+    .{prefix}-media-sub-table
+        position: absolute;
+        display: table;
+        z-index: 2;
+    .{prefix}-media-cell-table
+        display: table;
+    .{prefix}-media-range-value
+        cursor: default;
+        width: 40px;
+        height: 18px;
+        outline: none;
+        border-radius: 2px;
+        box-shadow: none;
+        border: 1px solid #d5d5d5;
+        text-align: center;
+        background-color: #282828;
+        color: silver;
+        font-weight: lighter;
+        vertical-align: baseline;
+
+.{prefix}-media-selector
+    display: inline-block;
+    > select
+        display: inline-block;
+        width: 60px;
+        height: 30px;
+        padding: 0.1em 0.2em 0.1em 0.2em;
+        vertical-align: middle;
+        border: 1px solid #e9e9e9;  
+        -moz-border-radius: 0.1em;
+        -webkit-border-radius: 0.1em;
+        border-radius: 0.1em;
+        box-shadow: inset 0 0 2px #a0a0a0;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        font-family: Arial,  Calibri, Tahoma, Verdana;
+        font-size: 0.8em;
+        color: #000099;
+        cursor: pointer;
+        background-color: #585858;
+        > option
+            font-size: 0.8em;
+            padding: 0.1em 0.2em 0.1em 0.2em;
+        > option[selected]
+            font-weight:bold;
+        > option:nth-child(even)
+            color: #000099;
+            background-color:#585858;
+    > select:hover
+        color: #101010;
+        border: 1px solid #cdcdcd;
+    > select:focus
+        box-shadow: 0 0 2px 1px #404040;
+
+.{prefix}-media-value
+    cursor: default;
+    width: 40px;
+    height: 24px;
+    outline: none;
+    border-radius: 2px;
+    box-shadow: none;
+    border: 1px solid #d5d5d5;
+    text-align: center;
+    background-color: #1c1c1c;
+    color: #fff;
+    font-weight: lighter;
+    vertical-align: baseline;
+    font-family: 'Noto Sans', sans-serif;
+    margin-top: 21px;
+    margin-left: 4px;
+
+.{prefix}-media-label
+        display: inline-block;
+        white-space: nowrap;
+
+.{prefix}-media-icon
+        width: 24px;
+        height: 24px;
+        > use
+          display: block;
+
+.{prefix}-media-cell-h
+    display: flex;
+    vertical-align: middle;
+    align-items: center;
+    margin: auto;
+.{prefix}-media-cell-v
+    display: flex;
+    vertical-align: middle;
+    flex-direction: column;
+    align-items: center;
+    margin: auto;

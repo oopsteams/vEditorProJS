@@ -198,8 +198,11 @@ class Panel extends Component {
       'track:item:changed': this._handlers.itemChanged,
       'track:wave:scale': this._handlers.itemChanged,
       'track:text:scale': this._handlers.itemChanged,
+      'track:sceneeffect:scale': this._handlers.itemChanged,
       'track:text:new': this._handlers.itemChanged,
       'track:animation:new': this._handlers.itemChanged,
+      'track:sceneeffect:new': this._handlers.itemChanged,
+      'panel:time:changed': this._handlers.itemChanged,
     });
   }
 
@@ -221,10 +224,10 @@ class Panel extends Component {
   }
 
   getPosOffset(progress) {
-    if (!progress || progress < 0 || progress > 1) {
+    if (Number.isNaN(progress) || progress < 0 || progress > 1) {
       return 0;
     }
-    if (this.tickPanel && progress) {
+    if (this.tickPanel) {
       // console.log('this.range[1] :', this.range[1]);
       const diff = progress * this.range[1];
       return -diff;
@@ -233,22 +236,39 @@ class Panel extends Component {
     return 0;
   }
 
-  convertPosToTime(x) {
+  convertPosToTime(x, strict = false) {
+    console.log('panel convertPosToTime x:', x, ',_left:', this._left);
     const diff = x - this._left;
     // const diff = this.range[0] - x;
     const time = (diff * this.count) / this.range[1];
+    if (strict) {
+      return time;
+    }
     const n = Math.floor(time / 0.05);
     const _time = Math.floor(n * 0.05 * 100) / 100;
 
     return _time;
   }
 
+  convertTimeToPos(time) {
+    const diff = (time * this.range[1]) / this.count;
+    // return this._left + diff;
+
+    return this.range[0] + diff;
+  }
+
+  calcPosByTime(time) {
+    const diff = (time * this.range[1]) / this.count;
+
+    return { diff, centerLeft: this.range[0], left: this._left };
+  }
+
   getLeftPosByProgress(time) {
     const progress = time / this.count;
-    if (!progress || progress < 0 || progress > 1) {
+    if (Number.isNaN(progress) || progress < 0 || progress > 1) {
       return this.range[0];
     }
-    if (this.tickPanel && progress) {
+    if (this.tickPanel) {
       const diff = progress * this.range[1];
 
       return this.range[0] + diff;
@@ -290,7 +310,7 @@ class Panel extends Component {
     if (progress < 0 || progress > 1) {
       return;
     }
-    if (this.tickPanel && progress) {
+    if (this.tickPanel && !Number.isNaN(progress)) {
       const diff = progress * this.range[1];
       this.tickPanel.left = this.range[0] - diff;
       this.changeCache.progress = progress;
@@ -301,6 +321,7 @@ class Panel extends Component {
       this.tickPanel.setCoords();
       this.timeline.indicatorMoved({ time: _time, progress });
       // }
+      this._left = this.tickPanel.left;
     }
   }
 

@@ -4,8 +4,9 @@ import templateHtml from '@/ui/template/submenu/animationsmenu';
 import itemHtml from '@/ui/template/texture/mediaitem';
 import { cls } from '@/util';
 // import { eventNames, selectorNames } from '@/consts';
-const minItemWidth = 120;
+const minItemWidth = 100;
 const maxLabelHeight = 20;
+const maxLineCount = 6;
 const ItemBorderWeight = 4;
 
 class AnimationControl extends TextureUI {
@@ -57,8 +58,12 @@ class AnimationControl extends TextureUI {
   }
 
   initDatas(callback) {
-    this.initCallback = callback;
-    this.datasource.fire('animations:load', {});
+    if (!this.inited) {
+      this.initCallback = callback;
+      this.datasource.fire('animations:load', {});
+    } else if (callback) {
+      callback();
+    }
   }
 
   _onAnimationsLoaded({ data }) {
@@ -85,8 +90,14 @@ class AnimationControl extends TextureUI {
       },
       delete: () => {
         if (this.activedAnimation) {
-          this.remove(this.activedAnimation.context);
-          this.activedAnimation.dispose();
+          this.remove(this.activedAnimation.context, () => {
+            const { section } = this.activedAnimation.context;
+            this.datasource.fire('track:animation:remove', {
+              animation: this.activedAnimation.context,
+              section,
+            });
+            this.activedAnimation.dispose();
+          });
         }
       },
     };
@@ -127,6 +138,38 @@ class AnimationControl extends TextureUI {
     }
   }
 
+  _onAddAnimationFromTemplate({ animation, commonSection, callback }) {
+    this.initDatas(() => {
+      const { mode } = animation;
+      const cfg = this.getAnimationSectionByMode(mode);
+      if (cfg) {
+        const trackItem = this.getUI().timeLine.track.getItemByUid(commonSection.uid);
+        cfg.startAt = animation.startAt;
+        cfg.dur = animation.dur;
+        this.setupAnimation({
+          trackItem,
+          animationItem: cfg,
+          prevent: true,
+          callback: (animationTrackItem) => {
+            const { start, duration } = animation;
+            if (duration) {
+              animationTrackItem.changeDuration({
+                startAt: start,
+                pos: 0,
+                dur: duration,
+                callback,
+              });
+            } else if (callback) {
+              callback();
+            }
+          },
+        });
+      } else if (callback) {
+        callback();
+      }
+    });
+  }
+
   _onAnimationItemSelected({ item }) {
     this.updateActivedAnimation(item);
   }
@@ -137,6 +180,30 @@ class AnimationControl extends TextureUI {
     }
   }
 
+  activeMenu({ item }) {
+    const menuNames = ['back'];
+    this.removeSubMenu(['delete']);
+    if (item.name === 'item') {
+      this.showMainLayer();
+      this.setTrackItem(item);
+      this.addSubMenu(menuNames);
+    } else if (item.name === 'transition') {
+      this.activedAnimation = null;
+      this.hideMainLayer();
+      this.addSubMenu(menuNames);
+    } else if (item.name === 'animation') {
+      this.activedAnimation = item;
+      menuNames.push('delete');
+      // this.disableSubmenus(menuNames);
+      this.addSubMenu(menuNames);
+      const { trackItem } = this.activedAnimation.context;
+      if (trackItem) {
+        this.setTrackItem(trackItem);
+      }
+    }
+  }
+
+  /*
   _onItemActive({ item }) {
     if (this.actived) {
       const menuNames = ['back'];
@@ -161,6 +228,7 @@ class AnimationControl extends TextureUI {
       }
     }
   }
+*/
 
   setTrackItem(trackItem) {
     this.trackItem = trackItem;
@@ -207,7 +275,7 @@ class AnimationControl extends TextureUI {
     return null;
   }
 
-  setupAnimation(trackItem, animationItem, callback) {
+  setupAnimation({ trackItem, animationItem, prevent, callback }) {
     animationItem.trackItem = trackItem;
     const dur = trackItem.getDuration();
     const section = this.parent.getSectionByItem(trackItem);
@@ -218,13 +286,22 @@ class AnimationControl extends TextureUI {
         elemId: animationItem.elemId,
         trackItem,
         text: animationItem.label,
+        mode: animationItem.mode,
       },
-      () => {
-        this.datasource.fire('track:animation:add', {
-          animation: this.copyDict(animationItem),
-          section,
-          callback,
-        });
+      (animationTrackItem) => {
+        if (!prevent) {
+          this.datasource.fire('track:animation:add', {
+            animation: this.copyDict(animationItem),
+            section,
+            callback: () => {
+              if (callback) {
+                callback(animationTrackItem);
+              }
+            },
+          });
+        } else if (callback) {
+          callback(animationTrackItem);
+        }
       }
     );
   }
@@ -247,19 +324,10 @@ class AnimationControl extends TextureUI {
     }
     const elemId = dataset.id;
     const animationItem = this.items[elemId];
-    console.log(
-      '_onAddBtnClick elemId:',
-      elemId,
-      ',trackItem:',
-      this.trackItem,
-      ', tran:',
-      animationItem
-    );
     animationItem.elemId = elemId;
     const { trackItem } = this;
     animationItem.trackItem = trackItem;
     const dur = trackItem.getDuration();
-    console.log('animation dur:', dur);
     this.activeElement(elemId);
     const section = this.parent.getSectionByItem(trackItem);
 
@@ -303,13 +371,14 @@ class AnimationControl extends TextureUI {
     // menuElem.classList.add('active');
   }
 
-  remove(animationSection) {
+  remove(animationSection, callback) {
     const layerItem = this._els.mainLayer.querySelector(`#${animationSection.elemId}`);
     const menuCss = `.${this.cssPrefix}-menu.check`;
     const menuElem = layerItem.querySelector(menuCss);
     menuElem.classList.remove('active');
-    const { section } = animationSection;
-    this.datasource.fire('track:animation:remove', { animation: animationSection, section });
+    if (callback) {
+      callback();
+    }
   }
 
   _appendItem(src, fileWidth, fileHeight, fileName) {
@@ -319,7 +388,7 @@ class AnimationControl extends TextureUI {
       html;
     const onAddBtnClick = this._onAddBtnClick.bind(this);
     const boxSize = 2;
-    const { width, height } = this.adjustItemSize(minItemWidth);
+    const { width, height } = this.adjustItemSize(minItemWidth, maxLineCount);
     const imgWidth = width - ItemBorderWeight;
     const imgHeight = height - maxLabelHeight - ItemBorderWeight - boxSize * 2;
     const labelWidth = imgWidth;
@@ -356,6 +425,17 @@ class AnimationControl extends TextureUI {
     return layerItem.id;
   }
 
+  _onDispose({ item, callback }) {
+    this.remove(item.context, callback);
+  }
+
+  _onClear({ callback }) {
+    this.ui.timeLine.animationtrack.clearAll(callback);
+    // if (callback) {
+    //   callback();
+    // }
+  }
+
   addDatasourceEvents() {
     const onAnimationsLoaded = this._onAnimationsLoaded.bind(this);
     this.datasource.on({
@@ -363,18 +443,24 @@ class AnimationControl extends TextureUI {
     });
   }
 
-  activeMenu() {}
-
   addEvents() {
     const onItemDeactive = this._onItemDeactive.bind(this);
     const onItemActive = this._onItemActive.bind(this);
     const onAnimationItemSelected = this._onAnimationItemSelected.bind(this);
     const onAnimationItemUnselected = this._onAnimationItemUnselected.bind(this);
+    const onDispose = this._onDispose.bind(this);
     this.getUI().timeLine.on({
       'slip:item:deselected': onItemDeactive,
       'slip:item:selected': onItemActive,
       'slip:animation:selected': onAnimationItemSelected,
       'slip:animation:unselected': onAnimationItemUnselected,
+      'track:animation:ui:remove': onDispose,
+    });
+    const onAddAnimationFromTemplate = this._onAddAnimationFromTemplate.bind(this);
+    const onClear = this._onClear.bind(this);
+    this.datasource.on({
+      'sync:main:track:animation': onAddAnimationFromTemplate,
+      'animation:clear': onClear,
     });
   }
 

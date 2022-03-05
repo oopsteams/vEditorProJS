@@ -72,7 +72,7 @@ class TrackTransition {
       lockScalingY: true,
       hasControls: false,
       stroke: '#ffd727',
-      strokeWidth: 3,
+      strokeWidth: 1,
       selectable: true,
       fill: '#ffd727',
     };
@@ -150,34 +150,10 @@ class TrackTransition {
   dispose() {
     this.getCanvas().remove(this.itemPanel);
     this.track.remove(this);
-    this.track.timeline.fire('track:transition:dispose', { transition: this.context });
+    this.track.timeline.fire('track:transition:dispose', { item: this });
     // console.log('will set null context.trackItem:', this.context.trackItem);
     this.context.trackItem = null;
   }
-
-  // setTransition(options, context) {
-  //   if (!this.transition) {
-  //     this.transition = new Transition(this, options, context);
-  //     this.transition.setup().then(() => {
-  //       this.transition.show(this);
-  //     });
-  //   } else {
-  //     this.transition.recover();
-  //     this.transition.show(this);
-  //   }
-  // }
-
-  // hideTransition() {
-  //   if (this.transition) {
-  //     this.transition.hide();
-  //   }
-  // }
-
-  // removeTransition() {
-  //   if (this.transition) {
-  //     this.transition.remove();
-  //   }
-  // }
 
   getRect() {
     const { left, top, width, height } = this.itemPanel;

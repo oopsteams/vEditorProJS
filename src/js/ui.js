@@ -17,14 +17,16 @@ import Storage from '@/ui/storage';
 import TimeLine from '@/timeline/ui/timeline';
 import { eventNames } from './consts';
 import DataSource from './datasource';
+import Scenesetting from './ui/scenesetting';
 
 const SUB_UI_COMPONENT = {
   Make,
   Amake,
   Imitate,
   Storage,
+  Scenesetting,
 };
-
+const InitMenu = 'scenesetting';
 const { CustomEvents, extend } = snippet;
 const CSS_PREFIX = cssPrefix;
 
@@ -34,9 +36,10 @@ const defaultPreviewItem = {
 };
 
 class Ui {
-  constructor(element, options, actions) {
+  constructor(element, options, editor) {
     this.options = this._initializeOption(options);
-    this._actions = actions;
+    this.editor = editor;
+    this._actions = editor.getActions();
     if (this.options.locale) {
       if (this.options.locale instanceof Locale) {
         this._locale = this.options.locale;
@@ -71,7 +74,14 @@ class Ui {
     this._menuBarElement = null;
     this._subMenuElement = null;
 
-    this.datasource = new DataSource({ context: null }, this);
+    this.datasource = new DataSource({ context: this }, this.editor);
+
+    this.makeSvgIcon = this.theme.makeMenSvgIconSet.bind(this.theme);
+
+    this._handler = {
+      onGoFirstFrame: this._onGoFirstFrame.bind(this),
+      onGoTailFrame: this._onGoTailFrame.bind(this),
+    };
 
     this._makeUiElement(element);
     this._setUiSize();
@@ -118,6 +128,7 @@ class Ui {
           'make',
           // 'centers',
           'imitate',
+          'scenesetting',
           // 'amake',
           // 'storage',
         ],
@@ -147,6 +158,7 @@ class Ui {
     selectedElement.classList.add(`${CSS_PREFIX}-container`);
     selectedElement.innerHTML = mainContainer({
       locale: this._locale,
+      makeSvgIcon: this.makeSvgIcon,
       biImage: this.theme.getStyle('common.bi'),
       commonStyle: this.theme.getStyle('common'),
       headerStyle: this.theme.getStyle('header'),
@@ -186,6 +198,9 @@ class Ui {
     this._mainElement = selector(cls('.layer-main'));
     this._editorElementWrap = selector(cls('.wrap'));
     this._timelineElementWrap = selector(cls('.timeline-wrap'));
+    this._timelineFoot = selector(cls('.layer-foot'));
+    this._timelineGoFirstFrameElement = selector('.tie-button-first-frame');
+    this._timelineGoTailFrameElement = selector('.tie-button-tail-frame');
     // console.log('ui new ._editorElementWrap:', this._editorElementWrap);
     this._editorElement = selector('.ve-pro');
     this._helpMenuBarElement = selector(cls('.help-menu'));
@@ -216,12 +231,13 @@ class Ui {
 
     this.timeLine = new TimeLine(this._timelineElementWrap, {
       locale: this._locale,
-      makeSvgIcon: this.theme.makeMenSvgIconSet.bind(this.theme),
+      makeSvgIcon: this.makeSvgIcon,
       ui: this,
       cssPrefix,
       previewItemWidth,
       previewItemHeight,
     });
+    this.timelineControls = null;
   }
 
   getFootLayerMaxRect() {
@@ -252,7 +268,7 @@ class Ui {
       // submenu ui instance
       this[menuName] = new SubComponentClass(this._subMenuElement, {
         locale: this._locale,
-        makeSvgIcon: this.theme.makeMenSvgIconSet.bind(this.theme),
+        makeSvgIcon: this.makeSvgIcon,
         menuBarPosition: this.options.menuBarPosition,
         usageStatistics: this.options.usageStatistics,
         textureLayer: this._textureLayerElement,
@@ -303,13 +319,13 @@ class Ui {
     */
     this._mainMenuBarElement.innerHTML = resultHtml({
       locale: this._locale,
-      makeSvgIcon: this.theme.makeMenSvgIconSet.bind(this.theme),
+      makeSvgIcon: this.makeSvgIcon,
       cssPrefix,
     });
     this.deleteAllElement = this._mainMenuBarElement.querySelector('li.tie-btn-deleteall');
     // this.deleteAllElement._display = this.deleteAllElement.style.display;
     // this.deleteAllElement.style.display = 'none';
-    this.resultElement = this._mainMenuBarElement.querySelector('li.tie-btn-play');
+    this.resultElement = this._mainMenuBarElement.querySelector('li.tie-btn-download');
     this.resultElement._display = this.resultElement.style.display;
     this.resultElement.style.display = 'none';
     const btnElement = this._mainMenuBarElement.querySelector('li.tie-btn-apply');
@@ -455,15 +471,22 @@ class Ui {
   }
 
   _initMenu() {
+    let evt = document.createEvent('MouseEvents');
+    evt.initEvent('click', true, false);
+    this._buttonElements[InitMenu].dispatchEvent(evt);
+    console.log('_initMenu trigger menu:', InitMenu);
     if (this.options.initMenu) {
-      const evt = document.createEvent('MouseEvents');
+      evt = document.createEvent('MouseEvents');
       evt.initEvent('click', true, false);
       this._buttonElements[this.options.initMenu].dispatchEvent(evt);
+      console.log('_initMenu trigger menu:', this.options.initMenu);
     }
 
     if (this.icon) {
       this.icon.registerDefaultIcon();
     }
+    this._timelineGoFirstFrameElement.addEventListener('click', this._handler.onGoFirstFrame);
+    this._timelineGoTailFrameElement.addEventListener('click', this._handler.onGoTailFrame);
   }
 
   _addMainMenuEvent(menuName) {
@@ -540,16 +563,17 @@ class Ui {
     }
     const { file } = result;
     if (file) {
-      const { url, name, width, height } = file;
+      const { url, name } = file;
       const a = this.resultElement.querySelector('a');
       if (a) {
         a.href = url;
         const txt = this._locale.localize('Download');
         a.textContent = `${txt}[${name}].`;
         a.download = name;
+        a.target = '__view';
       }
       this.resultElement.style.display = this.resultElement._display;
-      console.log('_onExportedOk width:', width, ',height:', height);
+      // console.log('_onExportedOk width:', width, ',height:', height);
     }
   }
 
@@ -557,6 +581,18 @@ class Ui {
     // console.log('_onTimeChanged params:', params);
     params.timestamp = Date.now();
     this.fire(eventNames.TIME_CHANGED, params);
+  }
+
+  _onGoFirstFrame() {
+    if (this.timeLine) {
+      this.timeLine.goFirstFrame();
+    }
+  }
+
+  _onGoTailFrame() {
+    if (this.timeLine) {
+      this.timeLine.goTailFrame();
+    }
   }
 
   updateDuration(dur) {

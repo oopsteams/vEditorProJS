@@ -1,13 +1,16 @@
 // import snippet from 'tui-code-snippet';
 // import fabric from 'fabric';
 import Component from '@/timeline/component';
-import TextItem from '../model/textTrackItem';
-import TextSlipWindow from './textSlipWindow';
-// import SlipWinndow from './slipWIndow';
+import SceneEffectItem from './sceneEffectItem';
+import SESlipWindow from './slipwin';
 import { tlComponentNames, eventNames } from '@/consts';
+import { iterator } from '@/util';
+const TrackEventPrefix = 'track:sceneeffect';
+const SlipEventPrefix = 'slip:sceneeffect';
+
 const boxHeight = 30;
 
-class TextTrack extends Component {
+class SceneEffectTrack extends Component {
   constructor(timeline, { type, top }) {
     super(tlComponentNames.TRACK, timeline);
     this.range = [];
@@ -20,7 +23,8 @@ class TextTrack extends Component {
     }
     this.type = type;
     this.top = top;
-    this.slipWinndow = new TextSlipWindow(this);
+    this.eventPrefix = { track: TrackEventPrefix, slip: SlipEventPrefix };
+    this.slipWinndow = new SESlipWindow(this);
     this._handlers = {
       mousedown: this._onFabricMouseDown.bind(this),
       mousemove: this._onFabricMouseMove.bind(this),
@@ -35,6 +39,7 @@ class TextTrack extends Component {
     this.start();
     this.counter = 0;
     this.setupSlip();
+    this.name = 'se';
   }
 
   getBoxHeight() {
@@ -64,8 +69,8 @@ class TextTrack extends Component {
 
   updateTop(top) {
     this.top = top;
-    this.groups.forEach((i) => {
-      i.updateTop(top);
+    this.groups.forEach((wi) => {
+      wi.updateTop(top);
     });
   }
 
@@ -86,21 +91,22 @@ class TextTrack extends Component {
     return item === this.groups[this.groups.length - 1];
   }
 
-  addText(start, duration, space, context) {
+  addSceneEffect(space, context) {
     // const total = this.totalDuration();
-    // start = start + total;
-    const { section } = context;
+    const { section, duration, trackItem } = context;
+    const { start } = trackItem;
     section.startAt = start;
-    const ti = new TextItem(
+    const ai = new SceneEffectItem(
       { start, duration, space, top: this.top, height: boxHeight, context },
       this
     );
+    // const progress = this.timeline.getCurrentProgress();
 
-    return ti.setup().then(() => {
-      this.groups.push(ti);
-      this.timeline.fire('track:text:new', {});
+    return ai.setup().then(() => {
+      this.groups.push(ai);
+      this.timeline.getPanel().fire(`panel:time:changed`, {});
 
-      return Promise.resolve(ti);
+      return Promise.resolve(ai);
     });
   }
 
@@ -124,14 +130,23 @@ class TextTrack extends Component {
     }
   }
 
-  clearAll() {
+  clearAll(callback) {
     const gs = [];
     this.groups.forEach((g) => {
       gs.push(g);
     });
-    gs.forEach((g) => {
-      g.dispose();
-    });
+    iterator(
+      gs,
+      (g, _idx, comeon) => {
+        g.dispose(() => {
+          comeon(true);
+        });
+      },
+      callback
+    );
+    // gs.forEach((g) => {
+    //   g.dispose();
+    // });
   }
 
   setupSlip() {
@@ -141,16 +156,19 @@ class TextTrack extends Component {
   active(item) {
     this.setCurrentItem(item);
     const isLast = item === this.groups[this.groups.length - 1];
-    this.timeline.fire('slip:text:selected', { item, isLast });
+    this.timeline.fire(`${this.eventPrefix.track}:active`, { item, isLast });
     this.slipWinndow.show(item);
+  }
+
+  blur() {
+    this.slipWinndow.hide();
+    this.timeline.fire(`${this.eventPrefix.slip}:unselected`, { item: null });
   }
 
   start() {
     this.timeline.on({
-      // [eventNames.PANEL_POS_CHANGED]: this._handlers.timechanged,
-      // [eventNames.PANEL_TICKS_CHANGED]: this._handlers.tickschanged,
       [eventNames.TIME_CHANGED]: this._handlers.timechanged,
-      'track:text:focus': this._handlers.focusItem,
+      [`${this.eventPrefix.track}:focus`]: this._handlers.focusItem,
       [eventNames.SYNC_TIME_CHANGED]: this._handlers.syncTimeChanged,
     });
   }
@@ -169,15 +187,6 @@ class TextTrack extends Component {
     if (this.tickPanel && progress) {
       const diff = progress * this.range[1];
       this.tickPanel.left = this.range[0] - diff;
-      // self.range[0] - this.left;
-      // console.log('_onPosChanged diff:', diff, ',', this.range);
-      // if (diff < 0) {
-      //   this.tickPanel.left = this.range[0];
-      // } else if (diff > this.range[1]) {
-      //   this.tickPanel.left = this.range[0] - this.range[1];
-      // } else {
-      //   this.tickPanel.left = this.range[0] - diff;
-      // }
     }
   }
 
@@ -187,7 +196,6 @@ class TextTrack extends Component {
       this.setup({ count, space }).then(() => {
         // console.log('add panel ok:', fObj);
         const lastTime = this.changeCache.progress * lastDuration;
-        console.log('lastTime:', lastTime, ', new r:', lastTime / duration);
         this._onPosChanged({ progress: lastTime / duration });
       });
     }
@@ -293,41 +301,24 @@ class TextTrack extends Component {
   }
 
   swapItem(first, second) {
-    const firstStart = first.start;
-    const secondStart = second.start;
+    const firstStart = first.reComputeStart();
+    const secondStart = second.reComputeStart();
     first.updateStart(secondStart);
     second.updateStart(firstStart);
-  }
-
-  syncMove(diff, items) {
-    if (items.length > 0) {
-      for (let i = 0; i < items.length; i += 1) {
-        const ti = items[i];
-        ti.updateStart(ti.start + diff);
-      }
-    }
-  }
-
-  focusTrackItem(trackItem) {
-    const currentTime = this.timeline.getCurrentTime();
-    // const start = trackItem.start;
-    const _end = trackItem.start + trackItem.getDuration();
-    if (currentTime < trackItem.start || currentTime > _end) {
-      this.timeline.changeTime(trackItem.start);
-      this.timeline.track.active(trackItem);
-    }
   }
 
   updatingPosition(item, { left, x, direct }) {
     let done = false;
     // findSelf = false;
-
     return new Promise((resolve) => {
       // const _items = [];
       for (let i = 0; i < this.groups.length; i += 1) {
         const ti = this.groups[i];
         if (ti === item) {
           // findSelf = true;
+          continue;
+        }
+        if (!item.isInSameGroup(ti)) {
           continue;
         }
         const [x0, x1] = ti.xyRange;
@@ -350,6 +341,7 @@ class TextTrack extends Component {
       }
       if (!done) {
         const newStart = this.timeline.convertPosToTime(left);
+        console.log('done newStart:', newStart, ',left:', left);
         item.updateStart(newStart);
         // this.syncMove(diff, _items);
       }
@@ -390,6 +382,22 @@ class TextTrack extends Component {
     });
   }
 
+  focusByTrackItem(trackItem) {
+    let find = false;
+    this.groups.forEach((ai) => {
+      if (ai.context.trackItem === trackItem) {
+        ai.focus();
+        find = true;
+      }
+    });
+    if (!find) {
+      this.blur();
+      // this.timeline.fire(`${this.eventPrefix.slip}:unselected`, { item: null });
+    }
+
+    return find;
+  }
+
   _onFabricMouseDown() {}
 
   _onFabricMouseMove() {}
@@ -397,4 +405,4 @@ class TextTrack extends Component {
   _onFabricMouseUp() {}
 }
 
-export default TextTrack;
+export default SceneEffectTrack;

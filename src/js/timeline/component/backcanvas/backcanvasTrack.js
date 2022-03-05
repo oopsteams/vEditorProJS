@@ -1,13 +1,12 @@
 // import snippet from 'tui-code-snippet';
 // import fabric from 'fabric';
 import Component from '@/timeline/component';
-import WaveItem from '../model/waveitem';
-import WaveSlipWindow from './waveSlipWindow';
+import BackCanvasItem from './backcanvasItem';
 // import SlipWinndow from './slipWIndow';
 import { tlComponentNames, eventNames } from '@/consts';
 const boxHeight = 30;
 
-class WaveTrack extends Component {
+class BackCanvasTrack extends Component {
   constructor(timeline, { type, top }) {
     super(tlComponentNames.TRACK, timeline);
     this.range = [];
@@ -20,7 +19,7 @@ class WaveTrack extends Component {
     }
     this.type = type;
     this.top = top;
-    this.slipWinndow = new WaveSlipWindow(this);
+    this.slipWinndow = null;
     this._handlers = {
       mousedown: this._onFabricMouseDown.bind(this),
       mousemove: this._onFabricMouseMove.bind(this),
@@ -35,6 +34,7 @@ class WaveTrack extends Component {
     this.start();
     this.counter = 0;
     this.setupSlip();
+    this.name = 'bc';
   }
 
   getBoxHeight() {
@@ -86,29 +86,24 @@ class WaveTrack extends Component {
     return item === this.groups[this.groups.length - 1];
   }
 
-  addWave(start, duration, files, space, context) {
-    const total = this.totalDuration();
-    console.log('addWave total:', total);
-    start = start + total;
-
-    const wi = new WaveItem(
-      { start, duration, files, space, top: this.top, height: boxHeight, context },
+  addBackCanvasItem(space, context) {
+    // const total = this.totalDuration();
+    const { section, duration, trackItem } = context;
+    const { start } = trackItem;
+    section.startAt = start;
+    const ai = new BackCanvasItem(
+      { start, duration, space, top: this.top, height: boxHeight, context },
       this
     );
-
     const progress = this.timeline.getCurrentProgress();
 
-    return wi.setup(progress).then(() => {
-      this.groups.push(wi);
-      this.timeline.fire('track:item:changed', { track: this });
+    return ai.setup(progress).then(() => {
+      this.groups.push(ai);
+      // this.timeline.fire('track:backcanvas:new', {});
+      this.timeline.getPanel().fire(`panel:time:changed`, {});
 
-      return Promise.resolve();
+      return Promise.resolve(ai);
     });
-    // return this.setup({ start, end, files, space }).then((fGroup) => {
-    //   fGroup.ctx = context;
-
-    //   return fGroup;
-    // });
   }
 
   setCurrentItem(item) {
@@ -126,7 +121,7 @@ class WaveTrack extends Component {
       const _item = this.hasItem();
       if (!_item) {
         this.setCurrentItem(null);
-        this.slipWinndow.hide();
+        // this.slipWinndow.hide();
       }
     }
   }
@@ -142,14 +137,14 @@ class WaveTrack extends Component {
   }
 
   setupSlip() {
-    this.slipWinndow.setup();
+    // this.slipWinndow.setup();
   }
 
   active(item) {
     this.setCurrentItem(item);
     const isLast = item === this.groups[this.groups.length - 1];
-    this.timeline.fire('track:wave:active', { item, isLast });
-    this.slipWinndow.show(item);
+    this.timeline.fire('track:backcanvas:active', { item, isLast });
+    // this.slipWinndow.show(item);
   }
 
   start() {
@@ -157,7 +152,7 @@ class WaveTrack extends Component {
       // [eventNames.PANEL_POS_CHANGED]: this._handlers.timechanged,
       // [eventNames.PANEL_TICKS_CHANGED]: this._handlers.tickschanged,
       [eventNames.TIME_CHANGED]: this._handlers.timechanged,
-      'track:wave:focus': this._handlers.focusItem,
+      'track:backcanvas:focus': this._handlers.focusItem,
       [eventNames.SYNC_TIME_CHANGED]: this._handlers.syncTimeChanged,
     });
   }
@@ -210,34 +205,16 @@ class WaveTrack extends Component {
   _onFocusItem({ elemId }) {
     const currentTime = this.timeline.getCurrentTime();
     for (let i = 0, n = this.groups.length; i < n; i += 1) {
-      const waveItem = this.groups[i];
-      if (waveItem.context.elemId === elemId) {
-        const _end = waveItem.start + waveItem.getDuration();
-        if (currentTime < waveItem.start || currentTime > _end) {
-          this.timeline.changeTime(waveItem.start);
-          this.active(waveItem);
+      const item = this.groups[i];
+      if (item.context.elemId === elemId) {
+        const _end = item.start + item.getDuration();
+        if (currentTime < item.start || currentTime > _end) {
+          this.timeline.changeTime(item.start);
+          this.timeline.track.active(item);
         }
         break;
       }
     }
-  }
-
-  checkInCache(newProgress) {
-    const { version, progress } = this.changeCache;
-    if (version !== this.version) {
-      this.changeCache.version = this.version;
-      this.changeCache.progress = newProgress;
-
-      return false;
-    }
-    if (newProgress !== progress) {
-      this.changeCache.version = this.version;
-      this.changeCache.progress = newProgress;
-
-      return false;
-    }
-
-    return true;
   }
 
   updateStart(items, newStart) {
@@ -249,11 +226,6 @@ class WaveTrack extends Component {
         ti.updateStart(lastStart);
         lastStart = ti.start + ti.getDuration();
       }
-      // this.groups.forEach((ti) => {
-      //   ti.hasTransition = true;
-      // });
-      const lastItem = this.groups[this.groups.length - 1];
-      lastItem.hideTransition();
     }
   }
 
@@ -322,17 +294,32 @@ class WaveTrack extends Component {
     this.updateStart(items, first.start + first.getDuration());
   }
 
+  syncMove(diff, items) {
+    if (items.length > 0) {
+      for (let i = 0; i < items.length; i += 1) {
+        const ti = items[i];
+        ti.updateStart(ti.start + diff);
+      }
+    }
+  }
+
   updatingPosition(item, { x, direct }) {
     let done = false;
+    // findSelf = false;
 
     return new Promise((resolve) => {
+      // const _items = [];
       for (let i = 0; i < this.groups.length; i += 1) {
         const ti = this.groups[i];
         if (ti === item) {
+          // findSelf = true;
           continue;
         }
         const [x0, x1] = ti.xyRange;
-        console.log('x:', x, ',x0:', x0, ',x1:', x1, ',direct:', direct);
+        // console.log('x:', x, ',x0:', x0, ',x1:', x1, ',direct:', direct);
+        // if (findSelf) {
+        //   _items.push(ti);
+        // }
         if (x > x0 && x < x1) {
           if (direct > 0) {
             this.insertAfter(item, ti);
@@ -344,6 +331,13 @@ class WaveTrack extends Component {
           break;
         }
       }
+      // if (!done && direct > 0) {
+      //   const newStart = this.timeline.convertPosToTime(x);
+      //   const { start } = item;
+      //   const diff = newStart - start;
+      //   item.updateStart(newStart);
+      //   this.syncMove(diff, _items);
+      // }
       resolve(done);
     });
   }
@@ -377,31 +371,21 @@ class WaveTrack extends Component {
       },
       moving(fEvent) {
         console.log('panel moving fEvent:', fEvent);
-        // const _startPoint = canvas.getPointer(fEvent.e);
-
-        // self._startPoint = _startPoint;
-
-        // const diff = self.range[0] - this.left;
-        // if (diff < 0) {
-        //   this.left = self.range[0];
-        //   if (!self.checkInCache(0)) {
-        //     self.timeline.fire('time:head', { progress: 0 });
-        //     self.timeline.fire(eventNames.TIME_CHANGED, { progress: 0 });
-        //   }
-        // } else if (diff > self.range[1]) {
-        //   this.left = self.range[0] - self.range[1];
-        //   if (!self.checkInCache(1)) {
-        //     self.timeline.fire('time:end', { progress: 1 });
-        //     self.timeline.fire(eventNames.TIME_CHANGED, { progress: 1 });
-        //   }
-        // } else {
-        //   const progress = diff / self.range[1];
-        //   if (!self.checkInCache(progress)) {
-        //     self.timeline.fire(eventNames.TIME_CHANGED, { progress });
-        //   }
-        // }
       },
     });
+  }
+
+  focusByTrackItem(trackItem) {
+    let find = false;
+    this.groups.forEach((ai) => {
+      if (ai.context.trackItem === trackItem) {
+        ai.focus();
+        find = true;
+      }
+    });
+    if (!find) {
+      this.timeline.fire('slip:backcanvas:unselected', { item: null });
+    }
   }
 
   _onFabricMouseDown() {}
@@ -411,4 +395,4 @@ class WaveTrack extends Component {
   _onFabricMouseUp() {}
 }
 
-export default WaveTrack;
+export default BackCanvasTrack;

@@ -1,4 +1,5 @@
-export default ({ biImage, commonStyle, headerStyle, cStyle, cssPrefix }) => `
+import footbar from './footbar';
+export default ({ locale, makeSvgIcon, biImage, commonStyle, headerStyle, cStyle, cssPrefix }) => `
   <div class="${cssPrefix}-main-layer">
     <div class="${cssPrefix}-layer-top">
       <div class="${cssPrefix}-header" style="${headerStyle}">
@@ -36,6 +37,9 @@ export default ({ biImage, commonStyle, headerStyle, cStyle, cssPrefix }) => `
         </div>
       </div>
     </div>
-    <div class="${cssPrefix}-layer-foot"><div class="${cssPrefix}-timeline-wrap"></div></div>
+    <div class="${cssPrefix}-layer-foot">
+      ${footbar({ locale, makeSvgIcon, cssPrefix })}
+      <div class="${cssPrefix}-timeline-wrap"></div>
+    </div>
   </div>
 `;

@@ -6,8 +6,9 @@ import itemHtml from '@/ui/template/texture/mediaitem';
 import TemplateInstance from './templateInstance';
 // import { eventNames, selectorNames } from '@/consts';
 import { cls } from '@/util';
-const minItemWidth = 60;
+const minItemWidth = 100;
 const maxLabelHeight = 20;
+const maxLineCount = 6;
 const ItemBorderWeight = 4;
 
 class Imitate extends TextureUI {
@@ -58,13 +59,29 @@ class Imitate extends TextureUI {
     };
     this._els = {
       mainLayer: this.mediaBody.querySelector(cls('.media-layer-main')),
+      tbox: this.mediaBody.querySelector(cls('.media-layer-main-tbox>div')),
+      bbox: this.mediaBody.querySelector(cls('.media-layer-main-bbox>div')),
     };
     // this.setup();
     this.templateInstance = new TemplateInstance(subMenuElement, options);
     this.items = {};
+    this.localTemplates = {};
     this.subMenus = [this.templateInstance];
     this.addDatasourceEvents();
     this.buildActions();
+  }
+
+  adjustUI() {
+    const aspect = 1 / this.textureAspect; // H / W
+    const btnWidth = minItemWidth;
+
+    const loadBtns = this.mediaBody.querySelectorAll(cls('.media-load-frame'));
+    loadBtns.forEach((element) => {
+      element.style.width = `${btnWidth}px`;
+      element.style.height = `${btnWidth * aspect}px`;
+    });
+
+    this._addLoadEvent();
   }
 
   buildActions() {
@@ -163,6 +180,13 @@ class Imitate extends TextureUI {
     this.hideLoading();
   }
 
+  _onVzipLoaded({ loaded }) {
+    // console.log(`_onVzipLoaded name:${name}, data:${data}`);
+    if (loaded) {
+      this.ui.changeMenu('make');
+    }
+  }
+
   _onAddBtnClick(event) {
     let dataset;
     const { tagName } = event.target;
@@ -213,7 +237,7 @@ class Imitate extends TextureUI {
       html;
     const onAddBtnClick = this._onAddBtnClick.bind(this);
     const boxSize = 2;
-    const { width, height } = this.adjustItemSize(minItemWidth, 8);
+    const { width, height } = this.adjustItemSize(minItemWidth, maxLineCount);
     const imgWidth = width - ItemBorderWeight;
     const imgHeight = height - maxLabelHeight - ItemBorderWeight - boxSize * 2;
     const labelWidth = imgWidth;
@@ -242,7 +266,7 @@ class Imitate extends TextureUI {
     layerItem.style.width = `${width}px`;
     layerItem.style.height = `${height}px`;
     layerItem.innerHTML = itemHtml({ html, cssPrefix: this.cssPrefix });
-    this._els.mainLayer.appendChild(layerItem);
+    this._els.bbox.appendChild(layerItem);
     const addElem = layerItem.querySelector(`.${this.cssPrefix}-menu.check>svg`);
     addElem.setAttribute('data-id', layerItem.id);
     addElem.addEventListener('click', onAddBtnClick);
@@ -250,17 +274,87 @@ class Imitate extends TextureUI {
     return layerItem.id;
   }
 
+  _getParserByName(name) {
+    let elemId;
+    for (elemId in this.localTemplates) {
+      if (this.localTemplates.hasOwnProperty(elemId)) {
+        const parser = this.localTemplates[elemId];
+        if (parser.srcFileName === name) {
+          return parser;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  iteratorLoad(cb) {
+    let info;
+    const n = this.__files.length;
+    if (n === 0) {
+      if (cb) {
+        cb();
+      }
+
+      return;
+    }
+    const [file] = this.__files.splice(0, 1);
+    if (!file) {
+      this.iteratorLoad(cb);
+    }
+    const { name } = file;
+    const parser = this._getParserByName(name);
+    // console.log('iteratorLoad name:', name);
+    if (parser) {
+      info = 'File[] had imported!';
+      info = info.replace('[]', `[${name}]`);
+      alert(info);
+      this.iteratorLoad(cb);
+    } else if (name.indexOf('vzip') >= 0) {
+      // file.type = 'vzip';
+      this.datasource.fire('vzip:load', { file });
+    } else {
+      info = 'File Type is Error';
+      alert(info);
+      this.iteratorLoad(cb);
+    }
+  }
+
+  _onFileChanged(event) {
+    // const [file] = event.target.files;
+    // let isMain = true;
+    // const classNames = event.target.getAttribute('class');
+    // console.log('event.target.files:', event.target.files, ',isMain:', isMain);
+    this.__files = [];
+    for (let i = 0, n = event.target.files.length; i < n; i += 1) {
+      // const f = event.target.files[i];
+      // f.isMain = isMain;
+      this.__files.push(event.target.files[i]);
+    }
+    this.iteratorLoad(() => {
+      console.log('Nothing Done!!!!');
+    });
+  }
+
   addDatasourceEvents() {
     const onTemplateLoaded = this._onTemplateLoaded.bind(this);
     const onTemplateReady = this._onTemplateReady.bind(this);
     const onPlayComplete = this._onPlayComplete.bind(this);
     const onTemplateDeleted = this._onTemplateDeleted.bind(this);
+    const onVzipLoaded = this._onVzipLoaded.bind(this);
     this.datasource.on({
       'template:loaded': onTemplateLoaded,
       'template:ready': onTemplateReady,
       'template:play:complete': onPlayComplete,
       'template:deleted': onTemplateDeleted,
+      'vzip:loaded': onVzipLoaded,
     });
+  }
+
+  _addLoadEvent() {
+    const onFileChanged = this._onFileChanged.bind(this);
+    const loadElement = this.mediaBody.querySelector(cls('.media-load-btn.main'));
+    loadElement.addEventListener('change', onFileChanged);
   }
 
   getTextureHtml() {

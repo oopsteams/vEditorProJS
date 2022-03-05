@@ -527,6 +527,17 @@ export function roundValue(val) {
   return Math.round(val * 100) / 100;
 }
 
+export function roundTimeline(val) {
+  const n = Math.floor(val / 0.05);
+  return Math.floor(n * 0.05 * 100) / 100;
+}
+
+export function colorReverse(colorValue) {
+  colorValue = `0x${colorValue.replace(/#/g, '')}`;
+  const str = `000000${(0xffffff - colorValue).toString(16)}`;
+  return str.substring(str.length - 6, str.length);
+}
+
 export function iterator(dataList, action, callback) {
   const finalCall = (rs, idx) => {
     if (callback && typeof callback.call === 'function') {
@@ -562,4 +573,44 @@ export function iterator(dataList, action, callback) {
     }
   };
   toAction(0);
+}
+
+export function buildElement(tagName, attributes, innerHtml) {
+  if (tagName) {
+    const elem = document.createElement(tagName);
+    if (attributes) {
+      const keys = Object.keys(attributes);
+      keys.forEach((key) => {
+        elem.setAttribute(key, attributes[key]);
+      });
+    }
+    if (innerHtml) {
+      elem.innerHTML = innerHtml;
+    }
+
+    return elem;
+  }
+
+  return null;
+}
+
+export function loadXMLString(txt) {
+  try {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(txt, 'text/xml');
+
+    return xmlDoc;
+  } catch (e0) {
+    try {
+      const xmlDoc = new window.ActiveXObject('Microsoft.XMLDOM');
+      xmlDoc.async = 'false';
+      xmlDoc.loadXML(txt);
+
+      return xmlDoc;
+    } catch (e1) {
+      console.log('not found ActiveXObject.');
+    }
+  }
+
+  return null;
 }

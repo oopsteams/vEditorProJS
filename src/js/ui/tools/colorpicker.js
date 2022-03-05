@@ -43,9 +43,16 @@ class Colorpicker {
     this._makePickerButtonElement(defaultColor);
     this._makePickerLayerElement(colorpickerElement, colorpickerElement.getAttribute('title'));
     this._color = defaultColor;
+    const pickerColor = [];
+    PICKER_COLOR.forEach((pc) => {
+      pickerColor.push(pc);
+    });
+    if (pickerColor.indexOf(this._color) < 0) {
+      pickerColor.push(this._color);
+    }
     this.picker = tuiColorPicker.create({
       container: this.pickerElement,
-      preset: PICKER_COLOR,
+      preset: pickerColor,
       color: defaultColor,
       usageStatistics: this.usageStatistics,
     });
@@ -149,7 +156,7 @@ class Colorpicker {
     this.picker.on('selectColor', (value) => {
       this._changeColorElement(value.color);
       this._color = value.color;
-      this.fire('change', value.color);
+      this.fire('change', value.color, this);
     });
 
     this.eventHandler = {
@@ -226,6 +233,11 @@ class Colorpicker {
   hide() {
     this._show = false;
     this.pickerControl.style.display = 'none';
+  }
+
+  show() {
+    this._show = true;
+    this.pickerControl.style.display = 'block';
   }
 
   /**

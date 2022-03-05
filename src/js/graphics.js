@@ -702,6 +702,23 @@ class Graphics {
     });
   }
 
+  getObject(id) {
+    return this._objects[id];
+  }
+
+  getObjectId(object) {
+    let key = null;
+    for (key in this._objects) {
+      if (this._objects.hasOwnProperty(key)) {
+        if (object === this._objects[key]) {
+          return key;
+        }
+      }
+    }
+
+    return null;
+  }
+
   /* All Event Handlers */
   _onMouseDown(fEvent) {
     const { e: event } = fEvent;
@@ -755,7 +772,11 @@ class Graphics {
   }
 
   _onObjectScaled(fEvent) {
-    this._lazyFire((object) => this.createObjectProperties(object), fEvent.target);
+    this._lazyFire(
+      events.OBJECT_SCALED,
+      (object) => this.createObjectProperties(object),
+      fEvent.target
+    );
   }
 
   _onObjectModified(fEvent) {
