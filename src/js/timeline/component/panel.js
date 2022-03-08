@@ -15,9 +15,6 @@ class Panel extends Component {
     this.labels = [];
     this.version = 0;
     this._handlers = {
-      mousedown: this._onFabricMouseDown.bind(this),
-      mousemove: this._onFabricMouseMove.bind(this),
-      mouseup: this._onFabricMouseUp.bind(this),
       poschanged: this._onPosChanged.bind(this),
       itemRemove: this._onItemRemove.bind(this),
       itemAdd: this._onItemAdd.bind(this),
@@ -340,13 +337,16 @@ class Panel extends Component {
     }
   }
 
-  _onItemChanged() {
+  _onItemChanged(ctx) {
     this._intervalAdjustDiff(false).then((params) => {
       this.timeline.syncIndicator(params);
       if (this.timeline.track.groups.length > 0) {
         this.enable();
       } else {
         this.disable();
+      }
+      if (ctx && ctx.callback) {
+        ctx.callback();
       }
     });
   }
@@ -504,12 +504,6 @@ class Panel extends Component {
       },
     });
   }
-
-  _onFabricMouseDown() {}
-
-  _onFabricMouseMove() {}
-
-  _onFabricMouseUp() {}
 }
 
 export default Panel;

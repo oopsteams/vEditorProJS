@@ -152,7 +152,10 @@ class TrackTransition {
     this.track.remove(this);
     this.track.timeline.fire('track:transition:dispose', { item: this });
     // console.log('will set null context.trackItem:', this.context.trackItem);
-    this.context.trackItem = null;
+    this.context.trackItem.removeTransition(() => {
+      console.log('removeTransition callback in.will remove this.');
+      this.context.trackItem = null;
+    });
   }
 
   getRect() {

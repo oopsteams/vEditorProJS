@@ -286,12 +286,19 @@ class Make extends TextureUI {
         }
         const { srcFileName, fileType } = parser;
         onProgress('加入队列', 0.1, '-');
-        parser.setup().then((__section) => {
-          console.log('new __section:', __section);
+        parser.setup(prevent).then((__section) => {
           section = __section;
           if (sourceSection) {
             section = sourceSection;
           }
+          console.log(
+            'new __section:',
+            __section,
+            ',prevent:',
+            prevent,
+            ',sourceSection:',
+            sourceSection
+          );
           section.dur = duration;
           this.ui.addVideoFrames(
             duration,

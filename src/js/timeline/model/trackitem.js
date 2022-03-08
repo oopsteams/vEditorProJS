@@ -25,11 +25,7 @@ class TrackItem {
     this.hasTransition = false;
     this.version = 0;
     this.isImage = context.fileType.indexOf('image') >= 0;
-    this._handlers = {
-      mousedown: this._onFabricMouseDown.bind(this),
-      mousemove: this._onFabricMouseMove.bind(this),
-      mouseup: this._onFabricMouseUp.bind(this),
-    };
+    this._handlers = {};
   }
 
   createGroup() {
@@ -344,7 +340,6 @@ class TrackItem {
           fImage.time = i;
           fImage.rw = file.w;
           fImage.exclude = file.exclude;
-          console.log('trackItem => Image.fromURL fImage:', fImage);
           this.frameViews.push(fImage);
           this._loopNewImage({ i: i + 1, start, end, files, space }, callback);
         },
@@ -551,14 +546,17 @@ class TrackItem {
 
   hideTransition() {
     if (this.transition) {
-      this.transition.dispose();
       this.hasTransition = false;
     }
   }
 
-  removeTransition() {
+  removeTransition(callback) {
     if (this.transition) {
-      this.transition.dispose();
+      this.transition = null;
+      this.hasTransition = false;
+      this.getTimeline().getPanel().fire(`panel:time:changed`, {
+        callback,
+      });
     }
   }
 
@@ -598,12 +596,6 @@ class TrackItem {
       moving() {},
     });
   }
-
-  _onFabricMouseDown() {}
-
-  _onFabricMouseMove() {}
-
-  _onFabricMouseUp() {}
 }
 
 CustomEvents.mixin(TrackItem);

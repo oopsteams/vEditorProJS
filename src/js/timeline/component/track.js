@@ -23,9 +23,6 @@ class Track extends Component {
     this.previewItemHeight = previewItemHeight;
     this.slipWinndow = new SlipWinndow(this);
     this._handlers = {
-      mousedown: this._onFabricMouseDown.bind(this),
-      mousemove: this._onFabricMouseMove.bind(this),
-      mouseup: this._onFabricMouseUp.bind(this),
       poschanged: this._onPosChanged.bind(this),
       tickschanged: this._onTicksChanged.bind(this),
       timechanged: this._onTimeChanged.bind(this),
@@ -82,7 +79,6 @@ class Track extends Component {
 
   getTransitionItems(trackItem) {
     let preItem, nextItem;
-    console.log('getTransitionItems trackItem:', trackItem);
     for (let i = 0, n = this.groups.length; i < n; i += 1) {
       const g = this.groups[i];
       if (g.name === 'item') {
@@ -175,21 +171,6 @@ class Track extends Component {
       });
     });
   }
-
-  /*
-  removeTransition() {
-    if (this.currentItem && !this.isLastItem(this.currentItem)) {
-      this.currentItem.removeTransition();
-      this.active(this.currentItem);
-      this.timeline.deactivateAll();
-      this.timeline.fire('track:remove', { track: this });
-
-      return true;
-    }
-
-    return false;
-  }
-  */
 
   removeFrame() {
     this.timeline.fire('track:remove', { track: this });
@@ -308,8 +289,8 @@ class Track extends Component {
       } else {
         this.setCurrentItem(null);
         this.timeline.fire('track:item:active', { item: null });
-        this.slipWinndow.hide();
       }
+      this.slipWinndow.hide();
     }
   }
 
@@ -523,12 +504,6 @@ class Track extends Component {
       resolve(done);
     });
   }
-
-  _onFabricMouseDown() {}
-
-  _onFabricMouseMove() {}
-
-  _onFabricMouseUp() {}
 }
 
 export default Track;

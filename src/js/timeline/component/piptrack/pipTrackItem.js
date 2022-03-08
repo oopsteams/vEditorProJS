@@ -314,7 +314,6 @@ class PipTrackItem extends TrackBaseItem {
           fImage.time = i;
           fImage.rw = file.w;
           fImage.exclude = file.exclude;
-          console.log('trackItem => Image.fromURL fImage:', fImage);
           this.frameViews.push(fImage);
           this._loopNewImage({ i: i + 1, start, end, files, space }, callback);
         },

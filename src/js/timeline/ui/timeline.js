@@ -541,8 +541,8 @@ class TimeLine {
       const tlHeight = maxOffset + TRACK_PAD;
       const dimension = this.getTimeLineMaxRect();
       const canvasHeight = this._canvas.getHeight();
-      console.log('tlHeight:', tlHeight, ',', canvasHeight, ',dimension.height:', dimension.height);
-      console.log('this.heightScale:', this.heightScale);
+      // console.log('tlHeight:', tlHeight, ',', canvasHeight, ',dimension.height:', dimension.height);
+      // console.log('this.heightScale:', this.heightScale);
       if (tlHeight * HEIGHT_SCALE > canvasHeight) {
         this.heightScale = (this.heightScale * tlHeight * HEIGHT_SCALE) / dimension.height;
         this.resizeTimeline(dimension);

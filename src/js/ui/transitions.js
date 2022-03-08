@@ -294,13 +294,15 @@ class Transitions extends TextureUI {
   }
 
   remove(transitionSection) {
-    console.log('remove transitionSection:', transitionSection);
+    // console.log('remove transitionSection:', transitionSection);
     const layerItem = this._els.mainLayer.querySelector(`#${transitionSection.elemId}`);
     const menuCss = `.${this.cssPrefix}-menu.check`;
     const menuElem = layerItem.querySelector(menuCss);
     menuElem.classList.remove('active');
-    const section = this.parent.getSectionByItem(transitionSection.trackItem);
+    const { trackItem } = transitionSection;
+    const section = this.parent.getSectionByItem(trackItem);
     this.datasource.fire('track:transition:remove', { transition: transitionSection, section });
+    this.activeElement(null);
   }
 
   _appendItem(src, fileWidth, fileHeight, fileName) {
