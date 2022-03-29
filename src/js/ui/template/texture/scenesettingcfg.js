@@ -14,6 +14,7 @@ export default ({ locale, headerStyle, makeSvgIcon, cssPrefix }) => `
               <select title="${locale.localize('Dimension')}">
                 <option value="1280x720">1280x720</option>
                 <option value="720x1280">720x1280</option>
+                <option value="800x800">800x800</option>
               </select>
             </div>
             <div class="${cssPrefix}-media-icon apply" style="display:inline-block;position:relative;">
